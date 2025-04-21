@@ -1,25 +1,64 @@
-from eigsep_sensors import accelerometer
-import pytest
+import time
 import numpy as np
-#import json
-#import os
+import math
+import eigsep_sensors as eig
+import pytest
 
 class Test_Accelerometer:
     def test_calc_orientation(self):
-        # XXX do something with accelerator.calculate_orientation
-        pass
-        #def calculate_orientation(x, y, z):
-        #    theta = np.arctan2(y, x)
-        #    phi = np.arctan2(np.sqrt(x**2 + y**2), z)
-        #    theta_deg = np.degrees(theta)
-        #    phi_deg = np.degrees(phi)
-        #    return theta_deg, phi_deg
+        """
+        Test `calculate_orientation` to ensure correct computation of azimuthal (theta)
+        and polar (phi) angles from given x, y, z values.
 
-    def test_transform_data_based_on_orientation(self):
-        # XXX do something with accelerator.transform_data_based_on_orientation
-        pass
-        #def transform_data_based_on_orientation(measured_data, theta):
-        #    transformed_data = measured_data * np.cos(np.radians(theta))
-        #    return transformed_data
+        Uses a known input where:
+        - theta = arctan2(1, 1) = 45°
+        - phi   = arctan2(sqrt(2), sqrt(2)) = 45°
+        """
+        x, y, z = 1.0, 1.0, np.sqrt(2)
+        theta, phi = eig.calculate_orientation(x, y, z)
 
+        assert math.isclose(theta, 45.0, abs_tol=0.01)
+        assert math.isclose(phi, 45.0, abs_tol=0.01)
 
+    def test_get_orientation_unit_vector(self):
+        """
+        Test `get_orientation_unit_vector` to ensure the returned vector is normalized
+        and directionally correct.
+
+        Input vector (3, 0, 4) has magnitude 5, so expected unit vector is (0.6, 0.0, 0.8).
+        """
+        x, y, z = 3.0, 0.0, 4.0
+        unit = eig.get_orientation_unit_vector(x, y, z)
+
+        assert math.isclose(unit["x_unit"], 0.6, abs_tol=0.01)
+        assert math.isclose(unit["y_unit"], 0.0, abs_tol=0.01)
+        assert math.isclose(unit["z_unit"], 0.8, abs_tol=0.01)
+
+    def test_get_pitch_roll_from_unit_vector(self):
+        """
+        Test `get_pitch_roll_from_unit_vector` to verify pitch and roll calculation
+        from a unit gravity vector.
+
+        Case:
+        - gx = 0 → pitch = 0°
+        - gy = 1, gz = 0 → roll = arctan2(1, 0) = 90°
+        """
+        gx, gy, gz = 0.0, 1.0, 0.0
+        pitch, roll = eig.get_pitch_roll_from_unit_vector(gx, gy, gz)
+
+        assert math.isclose(pitch, 0.0, abs_tol=0.01)
+        assert math.isclose(roll, 90.0, abs_tol=0.01)
+
+    def test_angle_with_vertical(self):
+        """
+        Test `angle_with_vertical` for expected angles between the Z-axis and
+        a given z-component of the unit vector.
+
+        Cases:
+        - z_unit = 1.0 → aligned with Z → 0°
+        - z_unit = 0.0 → perpendicular to Z → 90°
+        - z_unit = -1.0 → opposite to Z → 180°
+        """
+        assert math.isclose(eig.angle_with_vertical(1.0), 0.0, abs_tol=0.01)
+        assert math.isclose(eig.angle_with_vertical(0.0), 90.0, abs_tol=0.01)
+        assert math.isclose(eig.angle_with_vertical(-1.0), 180.0, abs_tol=0.01)
