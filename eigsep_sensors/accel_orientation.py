@@ -23,19 +23,50 @@ def calculate_orientation(x, y, z):
     phi_deg = np.degrees(phi)
     return theta_deg, phi_deg
 
-def transform_data_based_on_orientation(measured_data, theta):
+def get_orientation_unit_vector(x, y, z):
     """
-    Transform measured data based on the orientation angle.
-
-    This function scales the measured data by the cosine of the azimuthal angle (theta),
-    which adjusts the data based on the orientation of the sensor.
+    Normalize the gravity vector (x, y, z) from the accelerometer to get orientation.
 
     Args:
-        measured_data (float): The raw measured data to be transformed.
-        theta (float): The azimuthal angle in degrees used for the transformation.
+        x, y, z (float): Raw accelerometer readings.
 
     Returns:
-        float: The transformed data after applying the cosine of the theta angle.
+        dict: Unit vector showing device orientation with respect to gravity.
     """
-    transformed_data = measured_data * np.cos(np.radians(theta))
-    return transformed_data
+    g_mag = np.sqrt(x**2 + y**2 + z**2)
+    if g_mag == 0:
+        raise ValueError("Zero-magnitude gravity vector.")
+
+    return {
+        "x_unit": x / g_mag,
+        "y_unit": y / g_mag,
+        "z_unit": z / g_mag
+    }
+
+def get_pitch_roll_from_unit_vector(gx, gy, gz):
+    """
+    Calculate pitch and roll angles (in degrees) from a normalized gravity vector.
+    
+    Args:
+        gx, gy, gz (float): Components of the unit gravity vector.
+
+    Returns:
+        tuple: (pitch, roll)
+    """
+    pitch = np.arcsin(-gx) * (180.0 / np.pi)       # tilt forward/backward
+    roll  = np.arctan2(gy, gz) * (180.0 / np.pi)    # tilt left/right
+    return pitch, roll
+
+def angle_with_vertical(g_unit):
+    """
+    Compute the angle between the gravity unit vector and the Z axis.
+
+    Args:
+        g_unit (dict): Unit gravity vector (from get_orientation_unit_vector).
+
+    Returns:
+        float: Angle in degrees between gravity and Z-axis (i.e., device tilt).
+    """
+    dot_product = g_unit['z_unit']  # since Z-axis unit vector is (0, 0, 1)
+    angle_rad = np.arccos(dot_product)
+    return np.degrees(angle_rad)
