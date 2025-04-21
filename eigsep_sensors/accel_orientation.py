@@ -67,8 +67,6 @@ def angle_with_vertical(g_unit):
     Returns:
         float: Angle in degrees between gravity and Z-axis (i.e., device tilt).
     """
-    if not isinstance(g_unit, dict):
-        raise TypeError(f"Expected a dictionary, got {type(g_unit)} instead.")
     dot_product = g_unit['z_unit']  # since Z-axis unit vector is (0, 0, 1)
     angle_rad = np.arccos(dot_product)
     return np.degrees(angle_rad)
