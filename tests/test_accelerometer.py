@@ -49,24 +49,24 @@ class Test_Accelerometer:
         assert math.isclose(pitch, 0.0, abs_tol=0.01)
         assert math.isclose(roll, 90.0, abs_tol=0.01)
 
-def test_angle_with_vertical(self):
-    """
-    Test `angle_with_vertical` for expected angles between the Z-axis and
-    a given z-component of the unit vector.
+    def test_angle_with_vertical(self):
+        """
+        Test `angle_with_vertical` for expected angles between the Z-axis and
+        a given z-component of the unit vector.
 
-    Cases:
-    - z_unit = 1.0 → aligned with Z → 0°
-    - z_unit = 0.0 → perpendicular to Z → 90°
-    - z_unit = -1.0 → opposite to Z → 180°
-    """
-    # For z_unit = 1.0 (aligned with Z-axis)
-    g_unit = {'z_unit': 1.0, 'x_unit': 0.0, 'y_unit': 0.0}
-    assert math.isclose(eig.angle_with_vertical(g_unit), 0.0, abs_tol=0.01)
+        Cases:
+        - z_unit = 1.0 → aligned with Z → 0°
+        - z_unit = 0.0 → perpendicular to Z → 90°
+        - z_unit = -1.0 → opposite to Z → 180°
+        """
+        # For z_unit = 1.0 (aligned with Z-axis)
+        g_unit = {'z_unit': 1.0, 'x_unit': 0.0, 'y_unit': 0.0}
+        assert math.isclose(eig.angle_with_vertical(g_unit), 0.0, abs_tol=0.01)
 
-    # For z_unit = 0.0 (perpendicular to Z-axis)
-    g_unit = {'z_unit': 0.0, 'x_unit': 1.0, 'y_unit': 0.0}
-    assert math.isclose(eig.angle_with_vertical(g_unit), 90.0, abs_tol=0.01)
+        # For z_unit = 0.0 (perpendicular to Z-axis)
+        g_unit = {'z_unit': 0.0, 'x_unit': 1.0, 'y_unit': 0.0}
+        assert math.isclose(eig.angle_with_vertical(g_unit), 90.0, abs_tol=0.01)
 
-    # For z_unit = -1.0 (opposite to Z-axis)
-    g_unit = {'z_unit': -1.0, 'x_unit': 0.0, 'y_unit': 0.0}
-    assert math.isclose(eig.angle_with_vertical(g_unit), 180.0, abs_tol=0.01)
+        # For z_unit = -1.0 (opposite to Z-axis)
+        g_unit = {'z_unit': -1.0, 'x_unit': 0.0, 'y_unit': 0.0}
+        assert math.isclose(eig.angle_with_vertical(g_unit), 180.0, abs_tol=0.01)
