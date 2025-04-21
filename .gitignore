@@ -1,5 +1,6 @@
 # Ignore build folders
 build/
+dist/
 
 # Ignore egg-info folders
 *.egg-info/
@@ -7,3 +8,5 @@ build/
 # Ignore Python bytecode and cache files
 __pycache__/
 
+# virtual environment folders
+.venv/
