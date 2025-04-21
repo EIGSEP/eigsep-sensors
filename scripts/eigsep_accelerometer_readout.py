@@ -6,35 +6,58 @@ import board
 import adafruit_mma8451
 import eigsep_sensors as eig
 
-accelerometer = eig.Accelerometer()
+# === Setup ===
 
+accelerometer = eig.Accelerometer()
 stored_data = []
+
+# === Main Loop ===
+
+accelerometer = eig.Accelerometer()
+stored_data = []
+
+# === Main Loop ===
+
 try:
     while True:
         try:
             x, y, z = accelerometer.sensor.acceleration
+
+            # Normalize gravity vector
+            unit_vec = eig.get_orientation_unit_vector(x, y, z)
+            gx, gy, gz = unit_vec['x_unit'], unit_vec['y_unit'], unit_vec['z_unit']
+
+            # Compute orientation angles
+            pitch, roll = eig.get_pitch_roll_from_unit_vector(gx, gy, gz)
+            tilt_angle = eig.angle_with_vertical(gz)
             theta, phi = eig.calculate_orientation(x, y, z)
-            measured_data = 100
-            transformed_data = eig.transform_data_based_on_orientation(measured_data, theta)
+
             data_entry = {
                 "time": time.time(),
                 "x": x,
                 "y": y,
                 "z": z,
+                "x_unit": gx,
+                "y_unit": gy,
+                "z_unit": gz,
+                "pitch_deg": pitch,
+                "roll_deg": roll,
+                "tilt_from_vertical_deg": tilt_angle,
                 "theta_deg": theta,
-                "phi_deg": phi,
-                "transformed_data": transformed_data
+                "phi_deg": phi
             }
+
             stored_data.append(data_entry)
+
             print(f"Time: {data_entry['time']:.2f}")
             print(f"Accelerometer X: {x:.2f} Y: {y:.2f} Z: {z:.2f}")
-            print(f"Azimuthal Angle (θ): {theta:.2f}°")
-            print(f"Polar Angle (φ): {phi:.2f}°")
-            print(f"Transformed Data: {transformed_data:.2f}")
+            print(f"Pitch: {pitch:.2f}° | Roll: {roll:.2f}° | Tilt from Vertical: {tilt_angle:.2f}°")
+            print(f"Azimuthal Angle (θ): {theta:.2f}° | Polar Angle (φ): {phi:.2f}°")
             print("-" * 50)
             time.sleep(1.0)
+
         except IOError as e:
-            print(e)
+            print("Sensor read error:", e)
             time.sleep(1.0)
 
 except KeyboardInterrupt:
