@@ -1,7 +1,6 @@
 import time
 import eigsep_sensors as eig
 
-
 lidar = eig.TFLuna()
 
 try:
