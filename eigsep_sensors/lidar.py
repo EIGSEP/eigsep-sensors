@@ -17,9 +17,9 @@ class Lidar(ABC):
         pass
 
 class TFLuna(Lidar):
-    def __init__(self, i2c_bus=1, i2c_address=0x10):
+    def __init__(self, i2c_bus=1, i2c_address=0x10, bus=None):
         self.i2c_address = i2c_address
-        self.bus = smbus2.SMBus(i2c_bus)
+        self.bus = bus if bus is not None else smbus2.SMBus(i2c_bus)
 
     def read_word(self, reg_low, reg_high):
         """Reads a 16-bit value from two 8-bit registers."""
