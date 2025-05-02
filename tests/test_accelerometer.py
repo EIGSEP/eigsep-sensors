@@ -1,8 +1,8 @@
 import time
 import numpy as np
 import math
-import eigsep_sensors as eig
 import pytest
+import eigsep_sensors as eig
 
 class Test_Accelerometer:
     def test_calc_orientation(self):
