@@ -22,10 +22,9 @@ H-bridge (XY-160D) ENA1 takes maximum of 10 KHz PWM
 
 """
 import sys
-import time
-import math 
-from machine import Pin, ADC
-# import config
+from time import sleep
+from machine import Pin, ADC, PWM
+import config as cfg
 
 # ----- thermistor 
 class TemperatureSensor: 
@@ -48,10 +47,10 @@ class ThermistorSensor(TemperatureSensor):
         reads raw adc value from pico, converts to output voltage. Temps are 
         determined via Steinhart-Hart eq.
         """
-        raw_adc = adc.read_u16
-        vout = (raw_adc / 65535.0) * ADC_V # V
-        r_therm = NTC_R * (vout / (ADC_V - vout)) # ohmer-simpson
-        inv_T = A + B*math.log(r_therm) + C * (math.log(r_therm)**3) # 1 / T Steinhart-Hart eq.
+        raw_adc = adc.read_u16()
+        vout = (raw_adc / 65535.0) * cfg.ADC_V # V
+        r_therm = cfg.NTC_R * (vout / (cfg.ADC_V - vout)) # ohm
+        inv_T = cfg.A + cfg.B*math.log(r_therm) + cfg.C * (math.log(r_therm)**3) # 1 / T Steinhart-Hart eq.
         temp_K = 1 / inv_T
         return temp_K - 273.15 # C
 
@@ -65,7 +64,8 @@ class rainbowBridge:
     Maximum PWM freq. H-bridge can handle on 1-channel is 10 KHz
     """
     def __init__(self, pwm_pin, in1_pin, in2_pin, pwm_freq=8_000):
-        self.pwm = PWM_PIN(Pin(pwm_pin))
+        # self.pwm = cfg.PWM_PIN(Pin(pwm_pin)) # resulted in traceback error, cfg.PWM_PIN is an integer...
+        self.pwm = PWM(Pin(pwm_pin)) # imported PWM from machine
         self.pwm.freq(pwm_freq) # pwm pin and freq 8KHz default
         self.in1 = Pin(in1_pin, Pin.OUT)
         self.in2 = Pin(in2_pin, Pin>OUT)
@@ -80,15 +80,97 @@ class rainbowBridge:
         """determines direction of current flow"""
         self.in1.value(1 if cool else 0) # if cool is True, in1 is high, else low -- sets direction to cooling
         self.in2.value(0 if cool else 1)
+    
+    def drive(self, duty_pct, cool=True):
+        self._apply_dir(cool)
+        self._apply_power(duty_pct)
 
     def disable(self):
         """safety first - effectively turns off power and stops current flow"""
         self._apply_power(0)
-        self.in1.low()
-        self.in2.low()
+        self.in1.low() # 0 
+        self.in2.low() # 0
 
         
 # PID
 class PIDcontroller:
-    def __init__(self, kp, ki, kd):
-        self.kp, self.ki, self.kd
+    """
+    Parameters:
+    kp, ki, kd : PID control gains
+    """
+    def __init__(self, kp, ki, kd, out_min=0, out_max=100):
+        self.kp = kp, 
+        self.ki = ki, 
+        self.kd = kd,
+        self.out_min = out_min,
+        self.out_max = out_max,
+        self._integral = 0
+        self._prev_err = 0
+
+    def set_gains(self, kp=None, ki=None, kd=None):
+        """adjustable gains for fine-tuning..."""
+        if kp is not None:
+            self.kp = kp
+        if ki is not None:
+            self.ki = ki
+        if kd is not None:
+            self.kd = kd
+    
+    def reset(self):
+        self._integral = 0
+        self._prev_err = 0
+
+    def compute(self, setpoint, measured, dt):
+        # output = kp * err + (ki * integral[err * dt]) + (kd * der[err / dt])
+        err = setpoint - measured
+        self._integral += err * dt
+        deriv = (err - self._prev_err) / dt
+        output = (self.kp * err + self.kp * self._integral + self.kd * deriv)
+        self._prev_err = err
+        return clamp(output, self.out_min, self.out_max) # define clamp
+
+class ControlManager:
+    def __init__(self, cfg):
+        self.sensor = ThermistorSensor(cfg.ADC_CHAN)
+        self.pid = PIDcontroller(cfg.Kp, cfg.Ki, cfg.Kd)
+        self.driver = rainbowBridge(cfg.PWM_PIN, cfg.CURR_FWD, cfg.CURR_REV)
+        self.setpoint_c = cfg.TARGET_TEMP
+        self.sample_dt = cfg.SAMPLE_PER
+        self.loop_cnt = 0
+
+    def safety_check(self, temp_c):
+        if temp_c > TEMP_MAX:
+            self.driver.disable()
+            raise RuntimeError("Over-temp, shutting dowm.") # can change TEMP_MAX in config.py
+        
+    def step(self):
+        t_c = self.sensor.read_celsius()
+        self.safety_check(t_c)
+        duty = self.pid.compute(self, setpoint_c, t_c, self.sample_dt)
+        cool = (t_c > self.setpoint_c)
+        self.driver.drive(duty, cool)
+
+        if self.loop_cnt % LOG_EVERY_N == 0:
+            # log(f"T={t_c:.2f} °C, duty={duty:.1f} %, mode={'cool' if cool else 'heat'}")
+
+            # ------ for testing -----
+            log_line = f"{time.time():.1f},{t_c:.2f},{duty:.1f},{'cool' if cool else 'heat'}"
+            print(log_line)
+        self.loop_cnt += 1
+
+    def run_forrest(self):
+        try:
+            while True:
+                self.step()
+                sleep(self.sample_dt)
+        except KeyboardInterrupt:
+            print("okay stop running...")
+            self.disable() # maybe
+
+# ---- for testing ----
+if __name__ == "__main__":
+    manager = ControlManager(cfg)
+    manager.run_forrest()
+
+
+# ampy --port /dev/ttyACM0 run pid_control.py > log.csv for plotting/fine-tuning gain params

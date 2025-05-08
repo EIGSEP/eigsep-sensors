@@ -15,13 +15,16 @@ ADC_V = 3.3    # V, pico adc reference
 NTC_R = 10000 # 10k-ohm fixed resistor | may change
 NTC_BETA = 3950 # NTC beta coeff, seems standard? 
 
-# Steinhart-Hart coeffs
-A = 
-B = 
-C = 
+# Steinhart-Hart coeffs, can either calibrate the thermistor or use prev-calibration form pico/therm test
+A = 1.046316779e-03
+B = 2.491609615e-04
+C = 1.643686261e-08
 
-# PID control params
-Kp = 
-Ki = 
-Kd = 
+# PID control params, will need fine-tuning...
+Kp = 0
+Ki = 0
+Kd = 0
 TARGET_TEMP  = 30.0 # C˚, default temp
+TEMP_MAX = 50.0 # can change
+SAMPLE_PER = 1 # s
+LOG_EVERY_N = 5 # logs temp, duty cycle, and mode (cool or hot) every 5th iteration
