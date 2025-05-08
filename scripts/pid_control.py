@@ -22,7 +22,8 @@ H-bridge (XY-160D) ENA1 takes maximum of 10 KHz PWM
 
 """
 import sys
-from time import sleep
+import math
+from time import sleep, time
 from machine import Pin, ADC, PWM
 import config as cfg
 
@@ -47,7 +48,7 @@ class ThermistorSensor(TemperatureSensor):
         reads raw adc value from pico, converts to output voltage. Temps are 
         determined via Steinhart-Hart eq.
         """
-        raw_adc = adc.read_u16()
+        raw_adc = self.adc.read_u16()
         vout = (raw_adc / 65535.0) * cfg.ADC_V # V
         r_therm = cfg.NTC_R * (vout / (cfg.ADC_V - vout)) # ohm
         inv_T = cfg.A + cfg.B*math.log(r_therm) + cfg.C * (math.log(r_therm)**3) # 1 / T Steinhart-Hart eq.
@@ -68,7 +69,7 @@ class rainbowBridge:
         self.pwm = PWM(Pin(pwm_pin)) # imported PWM from machine
         self.pwm.freq(pwm_freq) # pwm pin and freq 8KHz default
         self.in1 = Pin(in1_pin, Pin.OUT)
-        self.in2 = Pin(in2_pin, Pin>OUT)
+        self.in2 = Pin(in2_pin, Pin.OUT)
         # self.disable() # but do i need it?
 
     def _apply_power(self, duty_pct):
@@ -99,11 +100,11 @@ class PIDcontroller:
     kp, ki, kd : PID control gains
     """
     def __init__(self, kp, ki, kd, out_min=0, out_max=100):
-        self.kp = kp, 
-        self.ki = ki, 
-        self.kd = kd,
-        self.out_min = out_min,
-        self.out_max = out_max,
+        self.kp = kp 
+        self.ki = ki 
+        self.kd = kd
+        self.out_min = out_min
+        self.out_max = out_max
         self._integral = 0
         self._prev_err = 0
 
@@ -119,15 +120,18 @@ class PIDcontroller:
     def reset(self):
         self._integral = 0
         self._prev_err = 0
+    
+    def _clamp(self, val, min_val, max_val):
+        return max(min(val, max_val), min_val)
 
     def compute(self, setpoint, measured, dt):
         # output = kp * err + (ki * integral[err * dt]) + (kd * der[err / dt])
         err = setpoint - measured
         self._integral += err * dt
         deriv = (err - self._prev_err) / dt
-        output = (self.kp * err + self.kp * self._integral + self.kd * deriv)
+        output = (self.kp * err + self.ki * self._integral + self.kd * deriv)
         self._prev_err = err
-        return clamp(output, self.out_min, self.out_max) # define clamp
+        return self._clamp(output, self.out_min, self.out_max) 
 
 class ControlManager:
     def __init__(self, cfg):
@@ -139,22 +143,22 @@ class ControlManager:
         self.loop_cnt = 0
 
     def safety_check(self, temp_c):
-        if temp_c > TEMP_MAX:
+        if temp_c > cfg.TEMP_MAX:
             self.driver.disable()
             raise RuntimeError("Over-temp, shutting dowm.") # can change TEMP_MAX in config.py
         
     def step(self):
         t_c = self.sensor.read_celsius()
         self.safety_check(t_c)
-        duty = self.pid.compute(self, setpoint_c, t_c, self.sample_dt)
+        duty = self.pid.compute(self.setpoint_c, t_c, self.sample_dt)
         cool = (t_c > self.setpoint_c)
         self.driver.drive(duty, cool)
 
-        if self.loop_cnt % LOG_EVERY_N == 0:
+        if self.loop_cnt % cfg.LOG_EVERY_N == 0:
             # log(f"T={t_c:.2f} °C, duty={duty:.1f} %, mode={'cool' if cool else 'heat'}")
 
             # ------ for testing -----
-            log_line = f"{time.time():.1f},{t_c:.2f},{duty:.1f},{'cool' if cool else 'heat'}"
+            log_line = f"{time():.1f},{t_c:.2f},{duty:.1f},{'cool' if cool else 'heat'}"
             print(log_line)
         self.loop_cnt += 1
 
