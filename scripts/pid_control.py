@@ -97,9 +97,11 @@ class rainbowBridge:
 class PIDcontroller:
     """
     Parameters:
-    kp, ki, kd : PID control gains
+    ------------
+    • kp, ki, kd : PID control gains
+    • out_min, out_max : % duty range 
     """
-    def __init__(self, kp, ki, kd, out_min=0, out_max=100):
+    def __init__(self, kp, ki, kd, out_min=0, out_max=100): # change out_min= -100 to allow for cooling
         self.kp = kp 
         self.ki = ki 
         self.kd = kd
@@ -131,7 +133,7 @@ class PIDcontroller:
         deriv = (err - self._prev_err) / dt
         output = (self.kp * err + self.ki * self._integral + self.kd * deriv)
         self._prev_err = err
-        return self._clamp(output, self.out_min, self.out_max) 
+        return self._clamp(output, self.out_min, self.out_max) # may need to change behavior of _clamp, need to allow for negative duty (-100, 100) for cooling to work - will test.
 
 class ControlManager:
     def __init__(self, cfg):
@@ -176,5 +178,6 @@ if __name__ == "__main__":
     manager = ControlManager(cfg)
     manager.run_forrest()
 
-
+# --- for testing on Rpi Pico 2 although it sucks at multi-tasking so maybe not. --- 
 # ampy --port /dev/ttyACM0 run pid_control.py > log.csv for plotting/fine-tuning gain params
+#             /dev/tty.usbmodem2101 on mac

@@ -21,10 +21,10 @@ B = 2.491609615e-04
 C = 1.643686261e-08
 
 # PID control params, will need fine-tuning...
-Kp = 0
-Ki = 0
-Kd = 0
-TARGET_TEMP  = 30.0 # C˚, default temp
+Kp = 3
+Ki = 0.5
+Kd = 0.5
+TARGET_TEMP  = 21.0 # C˚, default temp
 TEMP_MAX = 50.0 # can change
 SAMPLE_PER = 1 # s
 LOG_EVERY_N = 5 # logs temp, duty cycle, and mode (cool or hot) every 5th iteration
