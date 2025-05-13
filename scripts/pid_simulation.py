@@ -64,15 +64,15 @@ class PIDcontroller:
 # ----- "realistic" simulation -----
 
 # --- sim params ----
-setpoint = 30.0
-temp = 23.0 # start above or below setpoint
-ambient_temp = 23.0
-dt = 0.2
-gain = 0.02
+setpoint = 30
+temp = 25.0 # start above or below setpoint
+ambient_temp = 32.0
+dt = 0.2 # time step
+gain = 0.02 # temp rise per % duty per second
 cooling_rate = 0.005  # passive loss to environment, prob can do without - July be hot in Utah
-steps = 300
+steps = 600
 
-pid = PIDcontroller(kp=3.0, ki=0.75, kd=6.0, out_min=-100, out_max=100)
+pid = PIDcontroller(kp=3.5, ki=0.05, kd=20, out_min=-60, out_max=60)
 
 temps = []
 duties = []
@@ -82,6 +82,7 @@ for i in range(steps):
     error = setpoint - temp
     duty = pid.compute(setpoint, temp, dt)
     cool = (temp > setpoint)  # cooling mode if temp is too high
+
     if i % 20 == 0:
         print(f"Step {i}: Temp = {temp:.2f} °C, Duty = {duty:.1f}%, Mode = {'cool' if cool else 'heat'}")
 
@@ -97,13 +98,13 @@ for i in range(steps):
 
     temps.append(temp)
     duties.append(duty)
-    times.append(i * dt)
+    times.append(i * dt / 60) # mins
 
-plt.figure()
+plt.figure(figsize=(12,6))
 plt.plot(times, temps, label="Temperature (°C)")
 plt.plot(times, [setpoint]*len(times), "--", label="Setpoint")
 plt.plot(times, duties, label="Duty (%)", alpha=0.6)
-plt.xlabel("Time (s)")
+plt.xlabel("Time (min)")
 plt.ylabel("Value")
 plt.legend()
 plt.grid(True)
