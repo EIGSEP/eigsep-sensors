@@ -22,7 +22,7 @@ C = 1.643686261e-08
 
 # PID control params, setting values based off simulations
 Kp = 1.0
-Ki = 0.5
+Ki = 0.0
 Kd = 0.75
 MIN_OUT = -100.0
 MAX_OUT = 100.0
@@ -30,3 +30,8 @@ TARGET_TEMP  = 30.0 # C˚, default temp
 TEMP_MAX = 35.0 # can change
 SAMPLE_PER = 1 # s
 LOG_EVERY_N = 5 # logs temp, duty cycle, and mode (cool or hot) every 5th iteration
+
+# ---- experimental ----
+MAX_STEP = 5 # (%) largest duty change allowed per control loop
+DIR_HYST = 0.5 # (˚C)
+MAX_DUTY = 60 # (%)  max ceiling for current
