@@ -4,13 +4,18 @@
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
 
-// === PELTIER CONFIGURATION ===
+// === PELTIER-1 CONFIGURATION ===
 #define HBRIDGE_PWM_PIN    16    // PWM input on H‑bridge
 #define HBRIDGE_DIR_PIN1   18    // H‑bridge DIR pin A
 #define HBRIDGE_DIR_PIN2   19    // H‑bridge DIR pin B
-#define PWM_WRAP         1000   // PWM steps; 1000 gives 0.1% resolution
 
+// === PELTIER-2 CONFIGURATION ===
+// #define HBRIDGE_PWM_ENA2     // PWM input for motor 2
+// #define HBRIDGE_DIR_PIN3     // H-bridge DIR pin A, i.e. IN3
+// #define HBRIDGE_DIR_PIN4     // H-bridge DIR pin B, i.e. IN4
 
+// === PWM ===
+# define PWM_WRAP       1000 // PWM steps; 1000 gives 0.1% resolution
 
 typedef struct {
     // configuration

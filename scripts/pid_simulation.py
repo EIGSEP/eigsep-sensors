@@ -72,7 +72,7 @@ gain = 0.02 # temp rise per % duty per second
 cooling_rate = 0.005  # passive loss to environment, prob can do without - July be hot in Utah
 steps = 600
 
-pid = PIDcontroller(kp=3.5, ki=0.05, kd=20, out_min=-60, out_max=60)
+pid = PIDcontroller(kp=3.75, ki=0.5, kd=20, out_min=-60, out_max=60)
 
 temps = []
 duties = []
