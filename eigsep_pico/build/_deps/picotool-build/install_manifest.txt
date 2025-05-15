@@ -1,5 +1,0 @@
-/Users/rs_mbpro14/RAL/EIGSEP_github/eigsep-sensors/eigsep_pico/build/_deps/picotool/picotool
-/Users/rs_mbpro14/RAL/EIGSEP_github/eigsep-sensors/eigsep_pico/build/_deps/picotool/picotoolTargets.cmake
-/Users/rs_mbpro14/RAL/EIGSEP_github/eigsep-sensors/eigsep_pico/build/_deps/picotool/picotoolTargets-release.cmake
-/Users/rs_mbpro14/RAL/EIGSEP_github/eigsep-sensors/eigsep_pico/build/_deps/picotool/picotoolConfig.cmake
-/Users/rs_mbpro14/RAL/EIGSEP_github/eigsep-sensors/eigsep_pico/build/_deps/picotool/picotoolConfigVersion.cmake
