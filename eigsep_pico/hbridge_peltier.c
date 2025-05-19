@@ -74,12 +74,12 @@ void hbridge_drive(HBridge *hb) {
 
 void hbridge_raw_drive(bool forward, uint32_t level) {
     if (level == 0) {
-        // printf("Drive: off\n"); // uncomment for debugging
+        printf("Drive: off\n"); // uncomment for debugging
         gpio_put(HBRIDGE_DIR_PIN1, false);
         gpio_put(HBRIDGE_DIR_PIN2, false);
     } else {
         level = 0.4 * PWM_WRAP + 0.1 * level;
-        // printf("Drive: %b, %d\n", forward, level); // uncomment for debugging
+        printf("Drive: %b, %d\n", forward, level); // uncomment for debugging
         gpio_put(HBRIDGE_DIR_PIN1, forward);
         gpio_put(HBRIDGE_DIR_PIN2, !forward);
     }
