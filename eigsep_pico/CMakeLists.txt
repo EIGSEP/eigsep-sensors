@@ -8,7 +8,12 @@ set(CMAKE_CXX_STANDARD 17)
 
 pico_sdk_init()
 
-add_executable(pico_T_ctrl main.c hbridge_peltier.c read_temp.c)
+add_executable(pico_T_ctrl 
+    main.c 
+    hbridge_peltier.c 
+    read_temp.c
+    runtime_cmd.c
+)
 
 target_link_libraries(pico_T_ctrl pico_stdlib hardware_pwm hardware_adc pico_multicore)
 
