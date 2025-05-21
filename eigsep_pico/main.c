@@ -114,7 +114,7 @@ void usb_serial_request_reply(void) {
 
 // Main function
 int main() {
-    float T_target=30.0; // C
+    float T_target=32.0; // C
     float t_target=10.0; // s
     float gain=0.7;
 
