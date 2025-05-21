@@ -22,6 +22,8 @@ void hbridge_init(HBridge *hb, float T_target, float t_target, float gain) {
     hb->t_prev = hb->t_now = time(NULL);
     hb->drive = 0.0;
     hb->gain = gain;
+    hb->hysteresis = 3.0f; // ∆T, fine-tune
+    hb->active = true; // starts as engaged, setpoint achieved once
 }
 
 // Update latest temperature reading and time
@@ -30,6 +32,32 @@ void hbridge_update_T(HBridge *hb, time_t t_now, float T_now) {
     hb->T_prev = hb->T_now;
     hb->T_now = T_now;
     hb->t_now = t_now;
+}
+
+void hbridge_hysteresis_drive(HBridge *hb) {
+    
+    float error = hb->T_target - hb->T_now;
+    
+    if (hb->active) {
+        if (fabsf(error) <= hb->hysteresis) {
+            hb->active = false;                 // goes idle
+            hbridge_raw_drive(false, 0);
+            hb->drive = 0.0f;
+            return;
+        }
+        hbridge_smart_drive(hb);
+    } else {
+        // currently on idle - wake up when we move beyond ∆T
+        if (fabsf(error) > hb -> hysteresis) {
+            hb->active = true; 
+            hbridge_smart_drive(hb);
+        } else {
+            // stays off
+            hb->drive = 0.0f;
+            hbridge_raw_drive(false, 0);
+        }
+    }
+    
 }
 
 /// Drive the hbridge
