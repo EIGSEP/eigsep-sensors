@@ -3,3 +3,7 @@
 # Ignore build folder
 eigsep_pico/build/
 
+# Python bytecode and cache
+**/__pycache__/
+**/*.pyc
+**/*.pyo
