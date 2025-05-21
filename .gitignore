@@ -7,3 +7,7 @@ eigsep_pico/build/
 **/__pycache__/
 **/*.pyc
 **/*.pyo
+
+# Jupyter lab notebook checkpoints
+**/.ipynb_checkpoints/
+
