@@ -5,22 +5,35 @@
 volatile HBridge hb;
 // HBridge hb;
 
+// callback for repeating timer 
+bool control_temperature_callback(struct repeating_timer *t) {
+    hbridge_update_T(&hb, time(NULL), read_peltier_thermistor());
+    hbridge_hysteresis_drive(&hb);
+    return true; 
+}
+
 // Thread to read temperatures and run peltier continuously
 void control_temperature() {
     adc_init();
     adc_gpio_init(26);                 // enabling adc 0 on pin 26
     adc_set_temp_sensor_enabled(true); // reads internal pico temp...
-
-    while (true) {
-        hbridge_update_T(&hb, time(NULL), read_peltier_thermistor());
-        // hbridge_smart_drive(&hb);
-        hbridge_hysteresis_drive(&hb); // replacing old call (smart drive)
-        //hbridge_drive(&hb);
-        sleep_ms(1000 * hb.t_target / 2);
+    
+    struct repeating_timer timer;
+    add_repeating_timer_ms(-500, control_temperature_callback, NULL, &timer); // 0.5s interval, "-" indicates running in the background (core 1)
+    while(true) {
+        tight_loop_contents();
     }
+
+    // while (true) {
+    //     hbridge_update_T(&hb, time(NULL), read_peltier_thermistor());
+    //     // hbridge_smart_drive(&hb);
+    //     hbridge_hysteresis_drive(&hb); // replacing old call (smart drive)
+    //     //hbridge_drive(&hb);
+    //     sleep_ms(1000 * hb.t_target / 2);
+    // }
 }
 
-// // USB Serial Communication
+// // USB Serial Communication | testing communication & duty
 // void usb_serial() {
 //     char line[32];
 //     int  pos = 0;
@@ -114,7 +127,7 @@ void usb_serial_request_reply(void) {
 
 // Main function
 int main() {
-    float T_target=32.0; // C
+    float T_target=41.0; // C
     float t_target=10.0; // s
     float gain=0.7;
 

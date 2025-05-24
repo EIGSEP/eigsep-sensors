@@ -22,8 +22,8 @@ void hbridge_init(HBridge *hb, float T_target, float t_target, float gain) {
     hb->t_prev = hb->t_now = time(NULL);
     hb->drive = 0.0;
     hb->gain = gain;
-    hb->hysteresis = 3.0f; // ∆T, fine-tune
-    hb->active = true; // starts as engaged, setpoint achieved once
+    hb->hysteresis = 1.0f; // ∆T, fine-tune
+    hb->active = true;     // starts as engaged, setpoint achieved once
 }
 
 // Update latest temperature reading and time
@@ -34,6 +34,7 @@ void hbridge_update_T(HBridge *hb, time_t t_now, float T_now) {
     hb->t_now = t_now;
 }
 
+// Enables hysteresis, if ∆T deviates from setpoint by a set value, then the H-bridge is enabled and the TEC brings the temp back within range.
 void hbridge_hysteresis_drive(HBridge *hb) {
     
     float error = hb->T_target - hb->T_now;
@@ -102,12 +103,12 @@ void hbridge_drive(HBridge *hb) {
 
 void hbridge_raw_drive(bool forward, uint32_t level) {
     if (level == 0) {
-        printf("Drive: off\n"); // uncomment for debugging
+        // printf("Drive: off\n"); // uncomment for debugging
         gpio_put(HBRIDGE_DIR_PIN1, false);
         gpio_put(HBRIDGE_DIR_PIN2, false);
     } else {
         level = 0.4 * PWM_WRAP + 0.1 * level;
-        printf("Drive: %b, %d\n", forward, level); // uncomment for debugging
+        // printf("Drive: %b, %d\n", forward, level); // uncomment for debugging
         gpio_put(HBRIDGE_DIR_PIN1, forward);
         gpio_put(HBRIDGE_DIR_PIN2, !forward);
     }
