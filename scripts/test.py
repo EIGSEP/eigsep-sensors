@@ -66,8 +66,8 @@ def main():
             continue  # blank line, ignore
 
         if line == "REQ":
-	    if start_time is None:
-		start_time = time.time()	
+            if start_time is None:
+                start_time = time.time()	
             # Perform one measurement
             raw_adc, vout, current, rt, temp_c = measure_thermistor()
            
