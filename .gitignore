@@ -2,6 +2,8 @@
 
 # Ignore build folder
 eigsep_pico/build/
+build/
+dist/
 
 # Python bytecode and cache
 **/__pycache__/
@@ -11,3 +13,8 @@ eigsep_pico/build/
 # Jupyter lab notebook checkpoints
 **/.ipynb_checkpoints/
 
+# Ignore egg-info folders
+*.egg-info/
+
+# virtual environment folders
+.venv/
