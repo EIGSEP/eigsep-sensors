@@ -6,7 +6,7 @@
 #include <math.h> // for fabsf in hbridge_hysteresis_drive
 
 // === PELTIER-1 CONFIGURATION ===
-#define HBRIDGE_PWM_PIN    16    // PWM input on H‑bridge
+#define HBRIDGE_PWM_PIN    16    // PWM input on H‑bridge, this is the ENA1 pin on H-bridge
 #define HBRIDGE_DIR_PIN1   18    // H‑bridge DIR pin A
 #define HBRIDGE_DIR_PIN2   19    // H‑bridge DIR pin B
 
@@ -35,6 +35,11 @@ typedef struct {
     bool active;  // when true, PID is engaged
     bool enabled; // if we want to enable/disable H-bridge at runtime -- used in runtime_cmd.c line 28/34
     
+    // // === PID state ===
+    // float pid_integral;
+    // float pid_prev_error;
+    // float kp, ki, kd;
+    
 } HBridge;
 
 void hbridge_init(HBridge *hb, float T_target, float t_target, float gain);
@@ -43,3 +48,5 @@ void hbridge_hysteresis_drive(HBridge *hb);
 void hbridge_smart_drive(HBridge *hb);
 void hbridge_drive(HBridge *hb);
 void hbridge_raw_drive(bool forward, uint32_t level);
+// float hbridge_pid_compute(HBridge *hb, float setpoint, float measured, float dt); // testing PID control
+
