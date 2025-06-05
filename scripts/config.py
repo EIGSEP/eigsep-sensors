@@ -1,5 +1,5 @@
 """
-config.py contains constants and tunable perameters.
+config.py contains constants and tunable parameters.
 """
 
 # --- pico 2 pinouts to H-bridge -----
