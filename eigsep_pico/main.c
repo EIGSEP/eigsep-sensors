@@ -1,5 +1,6 @@
 #include "read_temp.h"
 #include "hbridge_peltier.h"
+#include "runtime_cmd.h"
 
 // Global temperature variable
 volatile HBridge hb;
@@ -59,7 +60,7 @@ void control_temperature() {
 //     }
 // }
 
-/// USB serial comms data logger
+// /// USB serial comms data logger
 void usb_serial_request_reply(void) {
     stdio_init_all();
     setvbuf(stdout, NULL, _IONBF, 0);             // un-buffer stdout
@@ -92,18 +93,18 @@ void usb_serial_request_reply(void) {
                 // output epoch, temp, set-point, drive 
                 printf("%lu,%.2f,%.2f,%.2f\r\n",
                        (unsigned long)snap.t_now,
-                       snap.T_now,
-                       snap.T_target,
-                       snap.drive);
+                       snap.T_now, snap.T_target, snap.drive);
                 
             } else if (strcmp(line, "END") == 0) {
                 printf("Stopped recording.\r\n");
-                break;        // optional: drop to reboot or loop again
+                break;        
+                
             } else if (line[0] != '\0') {
-                printf("ERR: unknown cmd: %s\r\n", line);
+                // printf("ERR: unknown cmd: %s\r\n", line);
+                host_cmd_execute(line, &hb);                     // enables run-time commands
             }
             
-        } else if (idx < (int)sizeof(line)-1) { 
+        } else if (idx < (int)sizeof(line) - 1) { 
             line[idx++] = (char)ch;              
         }
     }
@@ -111,9 +112,9 @@ void usb_serial_request_reply(void) {
 
 // Main function
 int main() {
-    float T_target=30.0; // C
+    float T_target=31.0; // C
     float t_target=10.0; // s
-    float gain=0.7;      // max allowed drive | was 0.7
+    float gain=0.2;      // max allowed drive | was 0.7
 
     hbridge_init(&hb, T_target, t_target, gain);
     multicore_launch_core1(control_temperature); // Launch temperature thread on core 1

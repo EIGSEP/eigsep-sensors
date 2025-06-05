@@ -8,8 +8,10 @@
 #include "hardware/pwm.h"
 #include <string.h> // for logger, usb_serial_request_reply in main.c
 
+#pragma once
+
 // ADC targets
-#define ADC_INTERNAL_PICO 4 // for pico internal temp
+#define ADC_INTERNAL_PICO 4 // pico ADC internal temp
 #define ADC_THERMISTOR 0  // Pin 26
 #define ADC_V 3.3f
 #define ADC_BITS 12

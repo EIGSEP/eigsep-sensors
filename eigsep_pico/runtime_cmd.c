@@ -40,10 +40,11 @@ int host_cmd_execute(char *line, HBridge *hb) {
         sleep_ms(20);
         rom_reset_usb_boot(0, 0);                        // never returns, funtion defined on pg. 477 pico C/C++ SDK guide. passing (0, 0) keeps USB active, host will see new RP2040 device.
         
-    } else if (strncmp(line, "HYST,", 4) == 0) {          // Hysteresis, <∆T>
-        float h = atof(&line[4]);
+    } else if (strncmp(line, "HYST,", 5) == 0) {          // Hysteresis, <∆T>
+        float h = atof(&line[5]);
         hb->hysteresis = h;
         printf("ACK: hysteresis %.2f\r\n", h);
+        return 0;
     }
     
       // else if (strncmp(line, "GAIN,", 5) == 0) {         // GAIN, kp, ki, kd

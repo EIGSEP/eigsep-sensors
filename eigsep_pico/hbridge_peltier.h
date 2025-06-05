@@ -4,6 +4,7 @@
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
 #include <math.h> // for fabsf in hbridge_hysteresis_drive
+#pragma once
 
 // === PELTIER-1 CONFIGURATION ===
 #define HBRIDGE_PWM_PIN    16    // PWM input on H‑bridge, this is the ENA1 pin on H-bridge
@@ -49,4 +50,5 @@ void hbridge_smart_drive(HBridge *hb);
 void hbridge_drive(HBridge *hb);
 void hbridge_raw_drive(bool forward, uint32_t level);
 // float hbridge_pid_compute(HBridge *hb, float setpoint, float measured, float dt); // testing PID control
+
 
