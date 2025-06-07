@@ -26,12 +26,18 @@ def steinhart_hart(r_therm, sh_coeff):
     Raises
     ------
     ValueError
-        If the temperature is non-positive.
+        If one or more of the coefficients in ``sh_coeff'' is negative
+        or the temperature is non-positive.
 
     """
-
+    if any(c < 0 for c in sh_coeff.values()):
+        raise ValueError(f"Invalid Steinhart-Hart coefficients: {sh_coeff}")
     ln_r = np.log(r_therm)
-    t_inv = sh_coeff["A"] + sh_coeff["B"] * ln_r + sh_coeff["C"] * ln_r**3
+    t_inv = (
+        sh_coeff.get("A")
+        + sh_coeff.get("B") * ln_r
+        + sh_coeff.get("C") * ln_r**3
+    )
     if t_inv <= 0:
         raise ValueError(f"Invalid temperature inverse: {t_inv}")
     return 1 / t_inv
@@ -92,7 +98,7 @@ class Thermistor:
             If the raw ADC value is without the expected range.
 
         """
-        if raw < 0 or raw > self.max_adc_value:
+        if raw <= 0 or raw > self.max_adc_value:
             raise ValueError(f"Invalid raw ADC value: {raw}")
         vout = raw / self.max_adc_value * self.Vcc  # output voltage
         # compute the resistance of the thermistor
@@ -104,6 +110,9 @@ class Thermistor:
         # steinhart-hart equation
         t_kelvin = steinhart_hart(r_therm, self.sh_coeff)
         return t_kelvin - 273.15
+
+    def _request_temperature(self):
+        self.ser.write(b"REQ\n")
 
     def read_temperature(self):
         """
@@ -121,7 +130,7 @@ class Thermistor:
             If the response from the thermistor is invalid.
 
         """
-        self.ser.write(b"REQ\n")
+        self._request_temperature()
         raw = self.ser.readline().decode().strip()  # raw adc value
         try:
             raw_value = int(raw)
