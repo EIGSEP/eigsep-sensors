@@ -23,7 +23,7 @@ header = {
     "Vcc": therm.Vcc,
     "R_fixed": therm.R_fixed,
     "max_adc_value": therm.max_adc_value,
-    "sh_coeffs": therm.sh_coeffs,
+    "sh_coeffs": therm.sh_coeff,
 }
 
 cnt = 0
@@ -33,7 +33,7 @@ while True:
     except ValueError as e:
         print(f"Error reading temperature: {e}")
         temp = None
-    if not temp:
+    if temp is None:
         time.sleep(SLEEP_TIME)
         continue
     all_readings[cnt] = temp
