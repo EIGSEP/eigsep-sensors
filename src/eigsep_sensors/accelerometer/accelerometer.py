@@ -2,11 +2,12 @@ import board
 import adafruit_mma8451
 from time import sleep
 
+
 class Accelerometer:
     """
     A class to interface with the MMA8451 accelerometer sensor over I2C.
 
-    This class initializes the I2C connection and the MMA8451 sensor. The sensor is 
+    This class initializes the I2C connection and the MMA8451 sensor. The sensor is
     used to measure acceleration along the X, Y, and Z axes.
 
     Attributes:
@@ -16,6 +17,7 @@ class Accelerometer:
     Methods:
         __init__: Initializes the I2C connection and sensor object.
     """
+
     def __init__(self):
         """
         Initializes the I2C connection and MMA8451 accelerometer sensor.
