@@ -4,8 +4,8 @@ import time
 """
 host_logger.py 
 
-This script communicates with an Rpi Pico 2 over serial connection to log thermal data for 
-monitoring and regulating the front-end system.
+This script communicates with an Rpi Pico 2 over serial connection to
+log thermal data for monitoring and regulating the front-end system.
 
 Edit as needed. We'll likely not write to .csv
 
