@@ -3,3 +3,4 @@ __version__ = "0.0.1"
 
 from . import accelerometer
 from .accelerometer import Accelerometer
+from .thermistor import Thermistor
