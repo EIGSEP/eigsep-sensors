@@ -4,10 +4,12 @@
 
 Code for sensors used: accelerometer, lidar, thermistors, peltiers.
 
-**Installation**
+**Installation:**
+
 Clone the repository and run `pip install .` in the root of the directory. This automatically installs all required dependencies. For developing, do `pip install .[dev]` instead to get additional dependencies related to testing of code.
 
-**Set-up**
+**Set-up:**
+
 Connect a Raspberry Pi Pico wired to the sensor used. Copy the script to run on the Pico (usually called "main.py") to the Pico root. If the script imports anything from this module, you must copy the whole package and the script. Below we show an example to set up the thermistor. The script to run on the Pico is scripts/thermistor/main.py.
 
 From a terminal, copy the package and the script to the Pico root:
