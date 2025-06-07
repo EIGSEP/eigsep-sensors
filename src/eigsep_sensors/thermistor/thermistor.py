@@ -34,9 +34,9 @@ def steinhart_hart(r_therm, sh_coeff):
         raise ValueError(f"Invalid Steinhart-Hart coefficients: {sh_coeff}")
     ln_r = np.log(r_therm)
     t_inv = (
-        sh_coeff.get("A")
-        + sh_coeff.get("B") * ln_r
-        + sh_coeff.get("C") * ln_r**3
+        sh_coeff.get("A", 0)
+        + sh_coeff.get("B", 0) * ln_r
+        + sh_coeff.get("C", 0) * ln_r**3
     )
     if t_inv <= 0:
         raise ValueError(f"Invalid temperature inverse: {t_inv}")
@@ -132,9 +132,8 @@ class Thermistor:
         """
         self._request_temperature()
         raw = self.ser.readline().decode().strip()  # raw adc value
-        try:
-            raw_value = int(raw)
-        except TypeError:
-            return None  # no data available
+        if not raw:
+            return None
+        raw_value = int(raw)
         temp = self.raw_to_temp(raw_value)
         return temp
