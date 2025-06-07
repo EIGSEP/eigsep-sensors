@@ -16,13 +16,9 @@ def main():
     adc = ADC(Pin(26))  # Using ADC on gpio pin 26
     while True:
         line = sys.stdin.readline().strip()
-        if not line:
-            continue  # ignoring blank lines
         if line == "REQ":
             raw_adc = adc.read_u16()  # read ADC value
             print(raw_adc)  # print raw ADC value
-        elif line == "END":
-            break
 
 
 # ----- Run main loop -----
