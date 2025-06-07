@@ -16,7 +16,7 @@ def test_steinhart_hart(logR):
     r_therm = np.exp(logR)
     coeffs = {"A": 1, "B": 1, "C": 1}
     temp = th.steinhart_hart(r_therm, coeffs)
-    assert temp == 1 / (1 + logR + logR**3)  # all coefficients are 1
+    assert temp == pytest.approx(1 / (1 + logR + logR**3))  # all coefficients are 1
     # one coeff at a time
     coeffs = {"A": 1}  # other coefficients are zero
     temp = th.steinhart_hart(r_therm, coeffs)
