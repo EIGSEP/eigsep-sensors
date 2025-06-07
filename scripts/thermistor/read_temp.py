@@ -4,6 +4,7 @@ This script is run on a computer (like Raspberry Pi), connected to a
 Raspberry Pi Pico via USB. The script 'main.py' must be running on the
 Pico.
 """
+
 from datetime import datetime
 import time
 import numpy as np

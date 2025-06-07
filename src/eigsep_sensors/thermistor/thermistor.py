@@ -3,11 +3,13 @@ import serial
 
 from . import constants as const
 
+
 class Thermistor:
     """
     Class handling communitcation with a thermistor connected to a
     serial port.
     """
+
     def __init__(self, port, timeout=1, sh_coeff=const.sh_coeff):
         """
         Set up the serial connection and initialize the thermistor.
@@ -24,14 +26,12 @@ class Thermistor:
 
         """
         # serial connection
-        self.ser = serial.Serial(
-            port=port, baudrate=115200, timeout=timeout
-        )
+        self.ser = serial.Serial(port=port, baudrate=115200, timeout=timeout)
         # temperature conversion
         self.Vcc = 3.3  # voltage supply to the thermistor
         self.R_fixed = 1e4  # fixed resistor value in ohms
         self._nbits = 16
-        self.max_adc_value = 2 ** self._nbits - 1
+        self.max_adc_value = 2**self._nbits - 1
         self.sh_coeff = sh_coeff
 
     def raw_to_temp(self, raw):
@@ -64,21 +64,18 @@ class Thermistor:
         else:
             r_therm = self.R_fixed * vout / den
         if r_therm <= 0:
-            raise ValueError(
-                f"Invalid resistance value: {r_therm} ohms"
-            )
+            raise ValueError(f"Invalid resistance value: {r_therm} ohms")
         # Steinhart-Hart equation
         ln_r = np.log(r_therm)
         t_inv = (
             self.sh_coeff["A"]
             + self.sh_coeff["B"] * ln_r
-            + self.sh_coeff["C"] * ln_r ** 3
+            + self.sh_coeff["C"] * ln_r**3
         )
         if t_inv <= 0:
             raise ValueError(f"Invalid temperature inverse: {t_inv}")
         t_kelvin = 1 / t_inv
         return t_kelvin - 273.15
-
 
     def read_temperature(self):
         """
