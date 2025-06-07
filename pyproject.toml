@@ -10,6 +10,7 @@ readme = "README.md"
 license = {text = "MIT"}
 authors = [
   { name="Pranav Karthik", email="pranavkarthik@berkeley.edu" },
+  { name="Richard Saeed", email="richardjs@berkeley.edu" },
   { name="Christian Hellum Bye", email="cbh@berkeley.edu" },
 ]
 requires-python = ">=3.9"
