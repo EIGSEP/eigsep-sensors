@@ -1,8 +1,10 @@
 import time
 import numpy as np
 import math
-import eigsep_sensors as eig
 import pytest
+
+import eigsep_sensors.accelerometer.accel_orientation as eig
+
 
 class Test_Accelerometer:
     def test_calc_orientation(self):
@@ -60,13 +62,17 @@ class Test_Accelerometer:
         - z_unit = -1.0 → opposite to Z → 180°
         """
         # For z_unit = 1.0 (aligned with Z-axis)
-        g_unit = {'z_unit': 1.0, 'x_unit': 0.0, 'y_unit': 0.0}
+        g_unit = {"z_unit": 1.0, "x_unit": 0.0, "y_unit": 0.0}
         assert math.isclose(eig.angle_with_vertical(g_unit), 0.0, abs_tol=0.01)
 
         # For z_unit = 0.0 (perpendicular to Z-axis)
-        g_unit = {'z_unit': 0.0, 'x_unit': 1.0, 'y_unit': 0.0}
-        assert math.isclose(eig.angle_with_vertical(g_unit), 90.0, abs_tol=0.01)
+        g_unit = {"z_unit": 0.0, "x_unit": 1.0, "y_unit": 0.0}
+        assert math.isclose(
+            eig.angle_with_vertical(g_unit), 90.0, abs_tol=0.01
+        )
 
         # For z_unit = -1.0 (opposite to Z-axis)
-        g_unit = {'z_unit': -1.0, 'x_unit': 0.0, 'y_unit': 0.0}
-        assert math.isclose(eig.angle_with_vertical(g_unit), 180.0, abs_tol=0.01)
+        g_unit = {"z_unit": -1.0, "x_unit": 0.0, "y_unit": 0.0}
+        assert math.isclose(
+            eig.angle_with_vertical(g_unit), 180.0, abs_tol=0.01
+        )

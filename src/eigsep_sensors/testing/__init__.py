@@ -1,0 +1,1 @@
+from .thermistor import DummyThermistor

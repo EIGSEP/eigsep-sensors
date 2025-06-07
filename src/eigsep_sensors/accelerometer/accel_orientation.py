@@ -1,10 +1,11 @@
 import numpy as np
 
+
 def calculate_orientation(x, y, z):
     """
     Calculate the orientation angles (theta and phi) based on 3D acceleration data.
 
-    This function computes the azimuthal angle (theta) and polar angle (phi) 
+    This function computes the azimuthal angle (theta) and polar angle (phi)
     from the given x, y, and z acceleration components using the arctangent function.
 
     Args:
@@ -23,6 +24,7 @@ def calculate_orientation(x, y, z):
     phi_deg = np.degrees(phi)
     return theta_deg, phi_deg
 
+
 def get_orientation_unit_vector(x, y, z):
     """
     Normalize the gravity vector (x, y, z) from the accelerometer to get orientation.
@@ -37,25 +39,23 @@ def get_orientation_unit_vector(x, y, z):
     if g_mag == 0:
         raise ValueError("Zero-magnitude gravity vector.")
 
-    return {
-        "x_unit": x / g_mag,
-        "y_unit": y / g_mag,
-        "z_unit": z / g_mag
-    }
+    return {"x_unit": x / g_mag, "y_unit": y / g_mag, "z_unit": z / g_mag}
+
 
 def get_pitch_roll_from_unit_vector(gx, gy, gz):
     """
     Calculate pitch and roll angles (in degrees) from a normalized gravity vector.
-    
+
     Args:
         gx, gy, gz (float): Components of the unit gravity vector.
 
     Returns:
         tuple: (pitch, roll)
     """
-    pitch = np.arcsin(-gx) * (180.0 / np.pi)       # tilt forward/backward
-    roll  = np.arctan2(gy, gz) * (180.0 / np.pi)    # tilt left/right
+    pitch = np.arcsin(-gx) * (180.0 / np.pi)  # tilt forward/backward
+    roll = np.arctan2(gy, gz) * (180.0 / np.pi)  # tilt left/right
     return pitch, roll
+
 
 def angle_with_vertical(g_unit):
     """
@@ -67,6 +67,6 @@ def angle_with_vertical(g_unit):
     Returns:
         float: Angle in degrees between gravity and Z-axis (i.e., device tilt).
     """
-    dot_product = g_unit['z_unit']  # since Z-axis unit vector is (0, 0, 1)
+    dot_product = g_unit["z_unit"]  # since Z-axis unit vector is (0, 0, 1)
     angle_rad = np.arccos(dot_product)
     return np.degrees(angle_rad)
