@@ -37,8 +37,8 @@ while True:
         time.sleep(SLEEP_TIME)
         continue
     all_readings[cnt] = temp
-    time = time.time()
-    header["times"].append(time)
+    current_time = time.time()
+    header["times"].append(current_time)
     if cnt == N_READINGS - 1:
         filename = f"temp_{datetime.now().strftime('%Y%m%d_%H%M%S')}.npz"
         np.savez(filename, data=all_readings, header=header)
