@@ -3,6 +3,43 @@ import serial
 
 from . import constants as const
 
+def steinhart_hart(r_therm, sh_coeff):
+    """
+    Convert resistance of a thermistor to temperature in Kelvin
+    using the Steinhart-Hart equation.
+    The equation is given by: 1/T = A + B * ln(R) + C * ln(R)^3
+
+    Parameters
+    ----------
+    r_therm : float
+        The resistance of the thermistor in ohms.
+    sh_coeff : dict
+        The coefficients for the Steinhart-Hart equation.
+        Keys are "A", "B", "C", values are floats.
+
+    Returns
+    -------
+    float
+        The temperature in Kelvin.
+
+    Raises
+    ------
+    ValueError
+        If the resistance is non-positive or the temperature inverse
+        is non-positive.
+
+    """
+
+    ln_r = np.log(r_therm)
+    t_inv = (
+        sh_coeff["A"]
+        + sh_coeff["B"] * ln_r
+        + sh_coeff["C"] * ln_r**3
+    )
+    if t_inv <= 0:
+        raise ValueError(f"Invalid temperature inverse: {t_inv}")
+    return 1 / t_inv
+
 
 class Thermistor:
     """
@@ -28,6 +65,9 @@ class Thermistor:
         # serial connection
         self.ser = serial.Serial(port=port, baudrate=115200, timeout=timeout)
         # temperature conversion
+        self._set_temp_constants(sh_coeff)
+
+    def _set_temp_constants(self, sh_coeff):
         self.Vcc = 3.3  # voltage supply to the thermistor
         self.R_fixed = 1e4  # fixed resistor value in ohms
         self._nbits = 16
@@ -49,12 +89,6 @@ class Thermistor:
         float
             The temperature in degrees Celsius.
 
-        Raises
-        ------
-        ValueError
-            If the raw value is such that the resistance or temperature
-            in Kelvin become negative.
-
         """
         vout = raw / self.max_adc_value * self.Vcc  # output voltage
         # compute the resistance of the thermistor
@@ -66,15 +100,7 @@ class Thermistor:
         if r_therm <= 0:
             raise ValueError(f"Invalid resistance value: {r_therm} ohms")
         # Steinhart-Hart equation
-        ln_r = np.log(r_therm)
-        t_inv = (
-            self.sh_coeff["A"]
-            + self.sh_coeff["B"] * ln_r
-            + self.sh_coeff["C"] * ln_r**3
-        )
-        if t_inv <= 0:
-            raise ValueError(f"Invalid temperature inverse: {t_inv}")
-        t_kelvin = 1 / t_inv
+        t_kelvin = steinhart_hart(r_therm, self.sh_coeff)
         return t_kelvin - 273.15
 
     def read_temperature(self):
@@ -99,7 +125,5 @@ class Thermistor:
             raw_value = int(raw)
         except TypeError:
             return None  # no data available
-        except ValueError:
-            raise ValueError(f"Invalid raw value: {raw}")
         temp = self.raw_to_temp(raw_value)
         return temp
