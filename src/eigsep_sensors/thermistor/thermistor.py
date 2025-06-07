@@ -3,6 +3,7 @@ import serial
 
 from . import constants as const
 
+
 def steinhart_hart(r_therm, sh_coeff):
     """
     Convert resistance of a thermistor to temperature in Kelvin
@@ -25,17 +26,12 @@ def steinhart_hart(r_therm, sh_coeff):
     Raises
     ------
     ValueError
-        If the resistance is non-positive or the temperature inverse
-        is non-positive.
+        If the temperature is non-positive.
 
     """
 
     ln_r = np.log(r_therm)
-    t_inv = (
-        sh_coeff["A"]
-        + sh_coeff["B"] * ln_r
-        + sh_coeff["C"] * ln_r**3
-    )
+    t_inv = sh_coeff["A"] + sh_coeff["B"] * ln_r + sh_coeff["C"] * ln_r**3
     if t_inv <= 0:
         raise ValueError(f"Invalid temperature inverse: {t_inv}")
     return 1 / t_inv
@@ -82,14 +78,22 @@ class Thermistor:
         Parameters
         ----------
         raw : int
-            The raw ADC value from the thermistor.
+            The raw ADC value from the thermistor. Expected to be
+            positive, 16-bit integer.
 
         Returns
         -------
         float
             The temperature in degrees Celsius.
 
+        Raises
+        ------
+        ValueError
+            If the raw ADC value is without the expected range.
+
         """
+        if raw < 0 or raw > self.max_adc_value:
+            raise ValueError(f"Invalid raw ADC value: {raw}")
         vout = raw / self.max_adc_value * self.Vcc  # output voltage
         # compute the resistance of the thermistor
         den = self.Vcc - vout
@@ -97,9 +101,7 @@ class Thermistor:
             r_therm = np.inf  # infinite resistance if voltage is equal to Vcc
         else:
             r_therm = self.R_fixed * vout / den
-        if r_therm <= 0:
-            raise ValueError(f"Invalid resistance value: {r_therm} ohms")
-        # Steinhart-Hart equation
+        # steinhart-hart equation
         t_kelvin = steinhart_hart(r_therm, self.sh_coeff)
         return t_kelvin - 273.15
 
