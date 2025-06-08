@@ -23,18 +23,13 @@ class DummyThermistor(Thermistor):
         Simulate a response from the Pico for the given command. This
         mimics the behavior of the Pico connected to the thermistor.
         If the command is "REQ", it sends the raw_adc value, as set by
-        the attribute ``raw_adc_response'', otherwise it does nothing.
-        Note that the Pico can only respond with integer values, thus
-        non-integers are not supported.
+        the attribute ``raw_adc_response''.
 
         """
-        try:
-            response = int(self.raw_adc_response)
-        except (ValueError, TypeError):
-            return
         cmd = self.pico.readline().decode().strip()
-        if cmd == "REQ":  # request temperature
-            self.pico.write(f"{response}\n".encode())
+        if cmd != "REQ" or self.raw_adc_response is None:
+            return
+        self.pico.write(f"{self.raw_adc_response}\n".encode())
 
     def _request_temperature(self):
         """

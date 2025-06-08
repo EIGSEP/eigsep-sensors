@@ -16,7 +16,9 @@ def test_steinhart_hart(logR):
     r_therm = np.exp(logR)
     coeffs = {"A": 1, "B": 1, "C": 1}
     temp = th.steinhart_hart(r_therm, coeffs)
-    assert temp == pytest.approx(1 / (1 + logR + logR**3))  # all coefficients are 1
+    assert temp == pytest.approx(
+        1 / (1 + logR + logR**3)
+    )  # all coefficients are 1
     # one coeff at a time
     coeffs = {"A": 1}  # other coefficients are zero
     temp = th.steinhart_hart(r_therm, coeffs)
@@ -82,12 +84,25 @@ def test_read_temperature(therm):
     # no response
     out = therm.read_temperature()
     assert out is None
-    # valid response
-    therm.raw_adc_response = therm.max_adc_value // 2
+    # valid response, format PIN:VALUE,
+    pin = "26"
+    value = therm.max_adc_value // 2
+    therm.raw_adc_response = f"{pin}:{value}"
     out = therm.read_temperature()
     assert out is not None
     # calculate expected temperature like in test_raw_to_temp
     expected_rtherm = therm.R_fixed
     expected_temp = th.steinhart_hart(expected_rtherm, therm.sh_coeff)
     expected_celsius = expected_temp - 273.15
-    assert out == pytest.approx(expected_celsius, abs=1e-2)
+    expected_out = {int(pin): pytest.approx(expected_celsius, abs=1e-2)}
+    assert out == expected_out
+    # multiple pins
+    pins = ["26", "27", "28"]
+    values = [therm.max_adc_value // 2] * len(pins)
+    therm.raw_adc_response = ",".join(f"{p}:{v}" for p, v in zip(pins, values))
+    out = therm.read_temperature()
+    assert out is not None
+    expected_out = {
+        int(pin): pytest.approx(expected_celsius, abs=1e-2) for pin in pins
+    }
+    assert out == expected_out

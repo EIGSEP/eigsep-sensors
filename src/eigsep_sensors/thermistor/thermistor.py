@@ -45,8 +45,9 @@ def steinhart_hart(r_therm, sh_coeff):
 
 class Thermistor:
     """
-    Class handling communitcation with a thermistor connected to a
-    serial port.
+    Class handling communication with one or more thermistors
+    connected to a serial port. If multiple thermistors are connected,
+    they are expected to have the same Steinhart-Hart coefficients.
     """
 
     def __init__(self, port, timeout=1, sh_coeff=const.sh_coeff):
@@ -116,12 +117,13 @@ class Thermistor:
 
     def read_temperature(self):
         """
-        Non-blocking read of the temperature from the thermistor.
+        Non-blocking read of the temperature from the thermistor(s).
 
         Returns
         -------
-        float
-            The temperature in degrees Celsius. None if no data is
+        dict
+            The temperature in degrees Celsius. The key corresponds to
+            the ADC pin that the reading is from. None if no data is
             available.
 
         Raises
@@ -129,11 +131,23 @@ class Thermistor:
         ValueError
             If the response from the thermistor is invalid.
 
+        Notes
+        -----
+        The method assumes that the Pico sends a single line of
+        data in the format PIN:VALUE, where PIN is the ADC pin
+        number and VALUE is the raw ADC value. Multiple readings
+        are commas separated, e.g. "0:12345,1:67890".
+
         """
         self._request_temperature()
-        raw = self.ser.readline().decode().strip()  # raw adc value
-        if not raw:
+        response = self.ser.readline().decode().strip()  # raw adc value
+        if not response:
             return None
-        raw_value = int(raw)
-        temp = self.raw_to_temp(raw_value)
+        readings = response.split(",")
+        temp = {}
+        for reading in readings:
+            pin, raw = reading.split(":")
+            pin = int(pin)
+            raw_value = int(raw)
+            temp[pin] = self.raw_to_temp(raw_value)
         return temp
