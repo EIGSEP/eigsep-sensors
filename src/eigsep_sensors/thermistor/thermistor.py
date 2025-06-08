@@ -45,7 +45,7 @@ def steinhart_hart(r_therm, sh_coeff):
 
 class Thermistor:
     """
-    Class handling communitcation with one or more thermistors
+    Class handling communication with one or more thermistors
     connected to a serial port. If multiple thermistors are connected,
     they are expected to have the same Steinhart-Hart coefficients.
     """
