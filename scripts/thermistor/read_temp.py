@@ -20,12 +20,14 @@ PORT = "/dev/ttyACM0"
 TIMEOUT = 1
 N_READINGS = 10  # readings per file
 SLEEP_TIME = 1  # seconds between readings
-all_readings = np.zeros(N_READINGS)
+all_readings = []
 therm = Thermistor(PORT, timeout=TIMEOUT)
 
 logger.info("Thermistor initialized")
 logger.debug(
-    f"Thermistor Vcc: {therm.Vcc}, R_fixed: {therm.R_fixed}, max_adc_value: {therm.max_adc_value}"
+    f"Thermistor Vcc: {therm.Vcc}, "
+    f"R_fixed: {therm.R_fixed}, "
+    f"max_adc_value: {therm.max_adc_value}"
 )
 
 header = {
@@ -49,7 +51,7 @@ while True:
         logger.debug("No temperature reading, waiting.")
         time.sleep(SLEEP_TIME)
         continue
-    all_readings[cnt] = temp
+    all_readings.append(temp)
     current_time = time.time()
     header["times"].append(current_time)
     logger.debug(
