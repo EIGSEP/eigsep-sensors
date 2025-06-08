@@ -10,6 +10,7 @@ readme = "README.md"
 license = {text = "MIT"}
 authors = [
   { name="Pranav Karthik", email="pranavkarthik@berkeley.edu" },
+  { name="Richard Saeed", email="richardjs@berkeley.edu" },
   { name="Christian Hellum Bye", email="cbh@berkeley.edu" },
 ]
 requires-python = ">=3.9"
@@ -21,8 +22,10 @@ classifiers = [
 ]
 dependencies = [
   "numpy",
+  "mpremote",
   "adafruit-circuitpython-mma8451",
   "board",
+  "mockserial @ git+https://github.com/christianhbye/mockserial.git"
 ]
 
 [project.optional-dependencies]
