@@ -2,6 +2,7 @@ import time
 import numpy as np
 import math
 import pytest
+import eigsep_sensors as eig
 
 import eigsep_sensors.accelerometer.accel_orientation as eig
 
