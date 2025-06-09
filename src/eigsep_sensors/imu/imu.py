@@ -1,14 +1,9 @@
-from abc import ABC, abstractmethod
 import serial
 from time import sleep
 import board
 import adafruit_mma8451
 
-class IMU(ABC):
-
-    def __init__(self):
-        pass
-
+class IMU():                                                                                                                                                                         
     def _request_data(self):
         self.ser.write(b"REQ\n")
     
