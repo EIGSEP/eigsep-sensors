@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import pytest
-import eigsep_sensors as eig
+import eigsep_sensors.imu as eig_imu
 
 class Test_Accelerometer:
     def test_calc_orientation(self):
@@ -14,7 +14,7 @@ class Test_Accelerometer:
         - phi   = arctan2(sqrt(2), sqrt(2)) = 45°
         """
         x, y, z = 1.0, 1.0, np.sqrt(2)
-        theta, phi = eig.calculate_orientation(x, y, z)
+        theta, phi = eig_imu.calculate_orientation(x, y, z)
 
         assert math.isclose(theta, 45.0, abs_tol=0.01)
         assert math.isclose(phi, 45.0, abs_tol=0.01)
@@ -27,7 +27,7 @@ class Test_Accelerometer:
         Input vector (3, 0, 4) has magnitude 5, so expected unit vector is (0.6, 0.0, 0.8).
         """
         x, y, z = 3.0, 0.0, 4.0
-        unit = eig.get_orientation_unit_vector(x, y, z)
+        unit = eig_imu.get_orientation_unit_vector(x, y, z)
 
         assert math.isclose(unit["x_unit"], 0.6, abs_tol=0.01)
         assert math.isclose(unit["y_unit"], 0.0, abs_tol=0.01)
@@ -43,7 +43,7 @@ class Test_Accelerometer:
         - gy = 1, gz = 0 → roll = arctan2(1, 0) = 90°
         """
         gx, gy, gz = 0.0, 1.0, 0.0
-        pitch, roll = eig.get_pitch_roll_from_unit_vector(gx, gy, gz)
+        pitch, roll = eig_imu.get_pitch_roll_from_unit_vector(gx, gy, gz)
 
         assert math.isclose(pitch, 0.0, abs_tol=0.01)
         assert math.isclose(roll, 90.0, abs_tol=0.01)
@@ -60,16 +60,16 @@ class Test_Accelerometer:
         """
         # For z_unit = 1.0 (aligned with Z-axis)
         g_unit = {"z_unit": 1.0, "x_unit": 0.0, "y_unit": 0.0}
-        assert math.isclose(eig.angle_with_vertical(g_unit), 0.0, abs_tol=0.01)
+        assert math.isclose(eig_imu.angle_with_vertical(g_unit), 0.0, abs_tol=0.01)
 
         # For z_unit = 0.0 (perpendicular to Z-axis)
         g_unit = {"z_unit": 0.0, "x_unit": 1.0, "y_unit": 0.0}
         assert math.isclose(
-            eig.angle_with_vertical(g_unit), 90.0, abs_tol=0.01
+            eig_imu.angle_with_vertical(g_unit), 90.0, abs_tol=0.01
         )
 
         # For z_unit = -1.0 (opposite to Z-axis)
         g_unit = {"z_unit": -1.0, "x_unit": 0.0, "y_unit": 0.0}
         assert math.isclose(
-            eig.angle_with_vertical(g_unit), 180.0, abs_tol=0.01
+            eig_imu.angle_with_vertical(g_unit), 180.0, abs_tol=0.01
         )
