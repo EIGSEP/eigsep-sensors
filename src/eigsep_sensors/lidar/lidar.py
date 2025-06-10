@@ -32,7 +32,7 @@ class Lidar(ABC):
         """
         pass
 
-class TFLuna(Lidar):
+class Lidar_TFLuna(Lidar):
     """
     Driver for the TFLuna LiDAR sensor over I2C.
 

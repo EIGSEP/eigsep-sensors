@@ -28,7 +28,7 @@ class TestLidar:
         returns valid data.
         """
         fake_bus = self.make_fake_bus()
-        lidar = eig.TFLuna(bus=fake_bus)
+        lidar = eig.Lidar_TFLuna(bus=fake_bus)
 
         distance, strength, temperature = lidar.read_all()
 
@@ -42,7 +42,7 @@ class TestLidar:
         """
         fake_bus = MagicMock()
         fake_bus.read_byte_data.side_effect = IOError("I2C failed")
-        lidar = eig.TFLuna(bus=fake_bus)
+        lidar = eig.Lidar_TFLuna(bus=fake_bus)
 
         distance, strength, temperature = lidar.read_all()
 
@@ -55,7 +55,7 @@ class TestLidar:
         Test that `close()` calls the `close()` method on the I2C bus object.
         """
         fake_bus = MagicMock()
-        lidar = eig.TFLuna(bus=fake_bus)
+        lidar = eig.Lidar_TFLuna(bus=fake_bus)
 
         lidar.close()
         fake_bus.close.assert_called_once()
