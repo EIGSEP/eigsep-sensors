@@ -1,93 +1,128 @@
 from abc import ABC, abstractmethod
+import numpy as np
 import smbus2
+import serial
 import time
 
 class Lidar(ABC):
     """
-    Abstract base class for LiDAR devices.
+    Base class for LiDAR sensors.
 
-    Subclasses must implement methods to read distance, signal strength,
-    and temperature data, and optionally provide cleanup via `close()`.
+    Provides a generic interface for requesting and reading data from LiDARs.
+    Subclasses must implement `_request_data` and `_parse_line` for communication and parsing.
     """
 
-    @abstractmethod
-    def read_all(self):
+    def __init__(self, port, timeout=1):
         """
-        Read distance, signal strength, and temperature from the LiDAR sensor.
+        Set up the serial connection and initialize the Lidar.
+
+        Parameters
+        ----------
+        port : str
+            The serial port to which the Lidar is connected.
+        timeout : float
+            The timeout for the serial connection in seconds.
+
+        """
+        self.ser = serial.Serial(port=port, baudrate=115200, timeout=timeout)
+
+    def _request_data(self):
+        """
+        Send a data request to the LiDAR sensor.
+        Should be implemented in subclasses depending on protocol (e.g., I2C or serial).
+        """
+        self.ser.write(b"REQ\n")
+
+    def read(self):
+        """
+        Request and read data from the LiDAR.
 
         Returns:
-            tuple: A 3-element tuple containing:
-                - distance_cm (int or None): Measured distance in centimeters.
-                - signal_strength (int or None): Signal strength of the measurement.
-                - temperature_celsius (float or None): Internal temperature in degrees Celsius.
+            dict or None: Parsed data as a dictionary if successful,
+                          otherwise None on failure.
         """
-        pass
-
+        self._request_data()
+        response = self._read_raw()
+        if not response:
+            return None
+        return self._parse_line(response)
+    
     @abstractmethod
-    def close(self):
+    def _parse_line(self, response):
         """
-        Close the LiDAR device connection, if applicable.
-
-        Typically used to release I2C or serial resources.
+        Fill in subclass
         """
         pass
+
+    def update_orientation(self, roll=None, pitch=None, yaw=None):
+        """
+        Update the IMU orientation used for transforming LiDAR readings.
+
+        Parameters
+        ----------
+        roll : float or None
+            Roll angle in degrees (rotation around X-axis).
+        pitch : float or None
+            Pitch angle in degrees (rotation around Y-axis).
+        yaw : float or None
+            Yaw angle in degrees (rotation around Z-axis).
+        """
+        self.roll = roll
+        self.pitch = pitch
+        self.yaw = yaw
 
 class Lidar_TFLuna(Lidar):
     """
-    Driver for the TFLuna LiDAR sensor over I2C.
+    LiDAR class for the TFLuna sensor using I2C.
 
-    Attributes:
-        i2c_address (int): I2C address of the sensor.
-        bus (smbus2.SMBus): I2C bus instance for communication.
+    Reads distance, signal strength, and temperature.
     """
 
-    def __init__(self, i2c_bus=1, i2c_address=0x10, bus=None):
+    def _parse_line(self, raw):
         """
-        Initialize the TFLuna sensor on the specified I2C bus and address.
+        Convert (distance, strength, temperature) to structured dict.
+        Adds Cartesian coordinates using yaw/pitch if available.
 
         Args:
-            i2c_bus (int): I2C bus number (default: 1).
-            i2c_address (int): I2C address of the TFLuna sensor (default: 0x10).
-            bus (smbus2.SMBus or None): Optional existing SMBus instance.
-        """
-        self.i2c_address = i2c_address
-        self.bus = bus if bus is not None else smbus2.SMBus(i2c_bus)
-
-    def read_word(self, reg_low, reg_high):
-        """
-        Read a 16-bit word from two consecutive 8-bit registers.
-
-        Args:
-            reg_low (int): Address of the lower byte register.
-            reg_high (int): Address of the higher byte register.
+            raw (tuple): (distance_cm, signal_strength, temperature_c)
 
         Returns:
-            int: Combined 16-bit value.
+            dict: Structured output with optional XY(Z) coordinates.
         """
-        low = self.bus.read_byte_data(self.i2c_address, reg_low)
-        high = self.bus.read_byte_data(self.i2c_address, reg_high)
-        return (high << 8) + low
+        if raw is None:
+            return None
 
-    def read_all(self):
-        """
-        Read distance, signal strength, and temperature from the sensor.
+        distance, strength, temperature = raw
+        result = {
+            "timestamp": time.time(),
+            "distance_cm": distance,
+            "signal_strength": strength,
+            "temperature_c": temperature
+        }
 
-        Returns:
-            tuple: (distance_cm, signal_strength, temperature_celsius),
-                   or (None, None, None) on error.
-        """
-        try:
-            distance = self.read_word(0x00, 0x01)
-            strength = self.read_word(0x02, 0x03)
-            temp_raw = self.read_word(0x04, 0x05)
-            temperature = temp_raw * 0.01
-            return distance, strength, temperature
-        except Exception as e:
-            print(f"[TFLuna] Read error: {e}")
-            return None, None, None
+        # Store angles if available
+        if self.yaw is not None:
+            result["yaw_deg"] = self.yaw
+        if self.pitch is not None:
+            result["pitch_deg"] = self.pitch
+        if self.roll is not None:
+            result["roll_deg"] = self.roll
 
-    def close(self):
-        """
-        Close the I2C connection to the TFLuna sensor.
-        """
-        self.bus.close()
+        # Calculate coordinates if orientation is provided
+        if self.yaw is not None:
+            yaw_rad = np.radians(self.yaw)
+
+            if self.pitch is not None:
+                pitch_rad = np.radians(self.pitch)
+                # Full 3D coordinates
+                x = distance * np.cos(pitch_rad) * np.cos(yaw_rad)
+                y = distance * np.cos(pitch_rad) * np.sin(yaw_rad)
+                z = distance * np.sin(pitch_rad)
+                result.update({"x_cm": x, "y_cm": y, "z_cm": z})
+            else:
+                # 2D polar projection
+                x = distance * np.cos(yaw_rad)
+                y = distance * np.sin(yaw_rad)
+                result.update({"x_cm": x, "y_cm": y})
+
+        return result
