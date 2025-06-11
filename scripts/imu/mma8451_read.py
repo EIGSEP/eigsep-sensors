@@ -16,7 +16,7 @@ try:
             x, y, z = accelerometer.sensor.acceleration
 
             # Normalize gravity vector
-            unit_vec = eig.get_orientation_unit_vector(x, y, z)
+            unit_vec = accelerometer.get_orientation_unit_vector(x, y, z)
             gx, gy, gz = (
                 unit_vec["x_unit"],
                 unit_vec["y_unit"],
@@ -24,9 +24,9 @@ try:
             )
 
             # Compute orientation angles
-            pitch, roll = eig.get_pitch_roll_from_unit_vector(gx, gy, gz)
-            tilt_angle = eig.angle_with_vertical(gz)
-            theta, phi = eig.calculate_orientation(x, y, z)
+            pitch, roll = accelerometer.get_pitch_roll_from_unit_vector(gx, gy, gz)
+            tilt_angle = accelerometer.angle_with_vertical(gz)
+            theta, phi = accelerometer.calculate_orientation(x, y, z)
 
             data_entry = {
                 "time": time.time(),

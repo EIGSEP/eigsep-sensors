@@ -30,7 +30,7 @@ while True:
     try:
         x, y, z = sensor.acceleration
         orientation = sensor.orientation
-        print(f"Accelerometer X: {x:.2f} Y: {y:.2f} Z: {z:.2f}. Orientation: {orientation}")
+        print(f"{x:.2f},{y:.2f},{z:.2f},{orientation}")
         time.sleep(1.0)
     except Exception as e:
         print("Sensor read error:", e)
