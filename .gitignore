@@ -5,6 +5,9 @@ peltier_pico/build/
 build/
 dist/
 
+# Ignore CMakeFiles folder
+peltier_pico/CMakeFiles/
+
 # Python bytecode and cache
 **/__pycache__/
 **/*.pyc
