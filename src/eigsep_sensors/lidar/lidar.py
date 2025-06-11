@@ -95,31 +95,7 @@ class Lidar_TFLuna(Lidar):
             distance = int(parts[0])
             strength = int(parts[1])
             temperature = float(parts[2])
-
-            result = {
-                "timestamp": time.time(),
-                "distance_cm": distance,
-                "signal_strength": strength,
-                "temperature_c": temperature,
-            }
-
-            # Optional angle-based Cartesian conversion
-            if self.yaw is not None:
-                yaw_rad = np.radians(self.yaw)
-                if self.pitch is not None:
-                    pitch_rad = np.radians(self.pitch)
-                    x = distance * np.cos(pitch_rad) * np.cos(yaw_rad)
-                    y = distance * np.cos(pitch_rad) * np.sin(yaw_rad)
-                    z = distance * np.sin(pitch_rad)
-                    result.update({"x_cm": x, "y_cm": y, "z_cm": z})
-                else:
-                    x = distance * np.cos(yaw_rad)
-                    y = distance * np.sin(yaw_rad)
-                    result.update({"x_cm": x, "y_cm": y})
-
-            return result
-
+            return distance, strength, temperature
         except Exception as e:
             print("[TFLuna] Parse error:", e)
-            return None
-
+            return None, None, None
