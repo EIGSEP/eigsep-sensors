@@ -78,51 +78,48 @@ class Lidar_TFLuna(Lidar):
     Reads distance, signal strength, and temperature.
     """
 
-    def _parse_line(self, raw):
+    def _parse_line(self, line):
         """
-        Convert (distance, strength, temperature) to structured dict.
-        Adds Cartesian coordinates using yaw/pitch if available.
+        Parse a comma-separated line from the Pico into structured LiDAR data.
 
         Args:
-            raw (tuple): (distance_cm, signal_strength, temperature_c)
+            line (str): String like '127,56,24.38' from the Pico
 
         Returns:
-            dict: Structured output with optional XY(Z) coordinates.
+            dict or None: Parsed dictionary with distance, signal, and temperature.
         """
-        if raw is None:
+        try:
+            parts = line.strip().split(",")
+            if len(parts) != 3:
+                return None
+            distance = int(parts[0])
+            strength = int(parts[1])
+            temperature = float(parts[2])
+
+            result = {
+                "timestamp": time.time(),
+                "distance_cm": distance,
+                "signal_strength": strength,
+                "temperature_c": temperature,
+            }
+
+            # Optional angle-based Cartesian conversion
+            if self.yaw is not None:
+                yaw_rad = np.radians(self.yaw)
+                if self.pitch is not None:
+                    pitch_rad = np.radians(self.pitch)
+                    x = distance * np.cos(pitch_rad) * np.cos(yaw_rad)
+                    y = distance * np.cos(pitch_rad) * np.sin(yaw_rad)
+                    z = distance * np.sin(pitch_rad)
+                    result.update({"x_cm": x, "y_cm": y, "z_cm": z})
+                else:
+                    x = distance * np.cos(yaw_rad)
+                    y = distance * np.sin(yaw_rad)
+                    result.update({"x_cm": x, "y_cm": y})
+
+            return result
+
+        except Exception as e:
+            print("[TFLuna] Parse error:", e)
             return None
 
-        distance, strength, temperature = raw
-        result = {
-            "timestamp": time.time(),
-            "distance_cm": distance,
-            "signal_strength": strength,
-            "temperature_c": temperature
-        }
-
-        # Store angles if available
-        if self.yaw is not None:
-            result["yaw_deg"] = self.yaw
-        if self.pitch is not None:
-            result["pitch_deg"] = self.pitch
-        if self.roll is not None:
-            result["roll_deg"] = self.roll
-
-        # Calculate coordinates if orientation is provided
-        if self.yaw is not None:
-            yaw_rad = np.radians(self.yaw)
-
-            if self.pitch is not None:
-                pitch_rad = np.radians(self.pitch)
-                # Full 3D coordinates
-                x = distance * np.cos(pitch_rad) * np.cos(yaw_rad)
-                y = distance * np.cos(pitch_rad) * np.sin(yaw_rad)
-                z = distance * np.sin(pitch_rad)
-                result.update({"x_cm": x, "y_cm": y, "z_cm": z})
-            else:
-                # 2D polar projection
-                x = distance * np.cos(yaw_rad)
-                y = distance * np.sin(yaw_rad)
-                result.update({"x_cm": x, "y_cm": y})
-
-        return result
