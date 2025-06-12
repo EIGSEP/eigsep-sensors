@@ -50,7 +50,7 @@ class Lidar(ABC):
     @abstractmethod
     def _parse_line(self, response):
         """
-        Fill in subclass
+        Fill in subclasses.
         """
         pass
 
@@ -98,4 +98,33 @@ class Lidar_TFLuna(Lidar):
             return distance, strength, temperature
         except Exception as e:
             print("[TFLuna] Parse error:", e)
+            return None, None, None
+        
+class Lidar_GRF250(Lidar):
+    """
+    LiDAR class for the GRF-250 sensor using I2C.
+
+    Reads distance, signal strength, and temperature.
+    """
+
+    def _parse_line(self, line):
+        """
+        Parse a comma-separated line from the Pico into structured LiDAR data.
+
+        Args:
+            line (str): String like '127,56,24.38' from the Pico
+
+        Returns:
+            dict or None: Parsed dictionary with distance, signal, and temperature.
+        """
+        try:
+            parts = line.strip().split(",")
+            if len(parts) != 3:
+                return None
+            distance = float(parts[0])
+            strength = int(parts[1])
+            temperature = float(parts[2])
+            return distance, strength, temperature
+        except Exception as e:
+            print("[GRF-250] Parse error:", e)
             return None, None, None
