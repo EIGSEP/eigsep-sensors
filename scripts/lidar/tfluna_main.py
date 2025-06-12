@@ -1,3 +1,4 @@
+import sys
 from machine import I2C, Pin
 import time
 
@@ -21,7 +22,9 @@ def read_tfluna():
 
 # === Main loop ===
 while True:
-    distance, strength, temperature = read_tfluna()
-    if distance is not None:
-        print(f"{distance},{strength},{temperature:.2f}")
-    time.sleep(0.1)
+    line = sys.stdin.readline().strip()
+    if line == "REQ":
+        distance, strength, temperature = read_tfluna()
+        if distance is not None:
+            print(f"{distance},{strength},{temperature:.2f}")
+        time.sleep(0.1)
