@@ -1,8 +1,9 @@
 import sys
+import time
 import board
 import busio
 
-from adafruit_bno08x import BNO08X_I2C
+from adafruit_bno08x.i2c import BNO08X_I2C
 from adafruit_bno08x import (
     BNO_REPORT_ACCELEROMETER,
     BNO_REPORT_GYROSCOPE,
@@ -17,8 +18,8 @@ from adafruit_bno08x import (
 
 # Setup I2C
 i2c = busio.I2C(board.GP1, board.GP0)
-while not i2c.try_lock():
-    pass
+while not i2c.try_lock:
+    time.sleep(0.1)
 
 imu = BNO08X_I2C(i2c)
 
@@ -61,3 +62,4 @@ while True:
     line = sys.stdin.readline().strip()
     if line == "REQ":
         print(read_and_format_imu_data())
+    time.sleep(0.5)
