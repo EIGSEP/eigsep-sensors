@@ -186,7 +186,7 @@ class IMU_BNO085(IMU):
                     data[key] = values[0]
             except Exception as e:
                 print(f"[IMU_BNO085] Parse error: {e}")
-                return None, None, None, None, None, None, None, None  # Fail-safe fallback
+                return None, None, None, None, None, None, None, None
 
         # Unpack in expected order
         return (
@@ -269,15 +269,3 @@ class IMU_BNO085(IMU):
         """
         angle_rad = np.arccos(np.clip(gz, -1.0, 1.0))
         return np.degrees(angle_rad)
-
-    def vector_magnitude(self, v):
-        """
-        Compute the magnitude of a 3D vector.
-
-        Args:
-            v (list): Vector [x, y, z]
-
-        Returns:
-            float: Magnitude
-        """
-        return np.linalg.norm(v)
