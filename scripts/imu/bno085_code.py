@@ -1,3 +1,4 @@
+#TO USE: Place on Raspberry Pi Pico with CircuitPython loaded, rename to code.py
 import sys
 import time
 import board
