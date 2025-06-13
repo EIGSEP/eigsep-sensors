@@ -69,7 +69,8 @@ class IMU(ABC):
         """
         self.ser.close()
 
-    def get_pitch_roll_from_gravity(self, gx, gy, gz):
+    @staticmethod
+    def get_pitch_roll_from_gravity(gx, gy, gz):
         """
         Compute pitch and roll from the gravity vector.
 
@@ -83,7 +84,8 @@ class IMU(ABC):
         roll = np.degrees(np.arctan2(gy, gz))
         return pitch, roll
 
-    def angle_with_vertical(self, gz):
+    @staticmethod
+    def angle_with_vertical(gz):
         """
         Compute angle from vertical using the Z-component of a unit
         gravity vector.
