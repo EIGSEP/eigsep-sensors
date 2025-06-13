@@ -10,7 +10,7 @@ SLEEP_TIME = 0.1
 all_readings = []
 header = {
     "times": [],
-    "fields": ["q", "a", "la", "g", "m", "grav", "steps", "stab"]
+    "fields": ["q", "a", "la", "g", "m", "grav", "steps", "stab"],
 }
 
 cnt = 0

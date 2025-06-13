@@ -1,4 +1,4 @@
-#TO USE: Place on Raspberry Pi Pico with CircuitPython loaded, rename to code.py
+# TO USE: Copy as "code.py" to a Raspberry Pi Pico with CircuitPython.
 import time
 import busio
 import board
@@ -36,4 +36,3 @@ while True:
     except Exception as e:
         print("Sensor read error:", e)
         time.sleep(1.0)
-        

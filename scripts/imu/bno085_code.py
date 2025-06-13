@@ -1,4 +1,4 @@
-#TO USE: Place on Raspberry Pi Pico with CircuitPython loaded, rename to code.py
+# TO USE: Copy as "code.py" on to a Raspberry Pi Pico with CircuitPython.
 import sys
 import time
 import board
@@ -12,7 +12,6 @@ from adafruit_bno08x import (
     BNO_REPORT_LINEAR_ACCELERATION,
     BNO_REPORT_ROTATION_VECTOR,
     BNO_REPORT_GRAVITY,
-    BNO_REPORT_GAME_ROTATION_VECTOR,
     BNO_REPORT_STEP_COUNTER,
     BNO_REPORT_STABILITY_CLASSIFIER,
 )
@@ -34,6 +33,7 @@ imu.enable_feature(BNO_REPORT_GRAVITY)
 imu.enable_feature(BNO_REPORT_STEP_COUNTER)
 imu.enable_feature(BNO_REPORT_STABILITY_CLASSIFIER)
 
+
 def read_and_format_imu_data():
     try:
         qx, qy, qz, qw = imu.quaternion
@@ -45,18 +45,21 @@ def read_and_format_imu_data():
         steps = imu.steps
         stability = imu.stability_classification
 
-        return ",".join([
-            f"q:{qx:.3f}:{qy:.3f}:{qz:.3f}:{qw:.3f}",
-            f"a:{ax:.3f}:{ay:.3f}:{az:.3f}",
-            f"la:{la_x:.3f}:{la_y:.3f}:{la_z:.3f}",
-            f"g:{gx:.3f}:{gy:.3f}:{gz:.3f}",
-            f"m:{mx:.3f}:{my:.3f}:{mz:.3f}",
-            f"grav:{gxv:.3f}:{gyv:.3f}:{gzv:.3f}",
-            f"steps:{steps}",
-            f"stab:{stability}",
-        ])
+        return ",".join(
+            [
+                f"q:{qx:.3f}:{qy:.3f}:{qz:.3f}:{qw:.3f}",
+                f"a:{ax:.3f}:{ay:.3f}:{az:.3f}",
+                f"la:{la_x:.3f}:{la_y:.3f}:{la_z:.3f}",
+                f"g:{gx:.3f}:{gy:.3f}:{gz:.3f}",
+                f"m:{mx:.3f}:{my:.3f}:{mz:.3f}",
+                f"grav:{gxv:.3f}:{gyv:.3f}:{gzv:.3f}",
+                f"steps:{steps}",
+                f"stab:{stability}",
+            ]
+        )
     except Exception as e:
         return f"ERR:{str(e)}"
+
 
 # === Main loop ===
 while True:
