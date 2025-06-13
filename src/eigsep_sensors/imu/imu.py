@@ -26,7 +26,9 @@ class IMU(ABC):
         if port is None:
             return
         else:
-            self.ser = serial.Serial(port=port, baudrate=115200, timeout=timeout)
+            self.ser = serial.Serial(
+                port=port, baudrate=115200, timeout=timeout
+            )
 
     def _request_imu(self):
         """
@@ -66,6 +68,34 @@ class IMU(ABC):
         Closes serial connection.
         """
         self.ser.close()
+
+    def get_pitch_roll_from_gravity(self, gx, gy, gz):
+        """
+        Compute pitch and roll from the gravity vector.
+
+        Args:
+            gx, gy, gz (float): Gravity components
+
+        Returns:
+            tuple: (pitch_deg, roll_deg)
+        """
+        pitch = np.degrees(np.arcsin(-gx))
+        roll = np.degrees(np.arctan2(gy, gz))
+        return pitch, roll
+
+    def angle_with_vertical(self, gz):
+        """
+        Compute angle from vertical using the Z-component of a unit
+        gravity vector.
+
+        Args:
+            gz (float): Z-component of a normalized vector
+
+        Returns:
+            float: Angle from vertical in degrees
+        """
+        angle_rad = np.arccos(np.clip(gz, -1.0, 1.0))
+        return np.degrees(angle_rad)
 
 
 class IMU_MMA8451(IMU):
@@ -159,36 +189,6 @@ class IMU_MMA8451(IMU):
 
         return x / g_mag, y / g_mag, z / g_mag
 
-    def get_pitch_roll_from_unit_vector(self, gx, gy, gz):
-        """
-        Calculate pitch and roll angles (in degrees) from a normalized
-        gravity vector.
-
-        Args:
-            gx, gy, gz (float): Components of the unit gravity vector.
-
-        Returns:
-            tuple: (pitch, roll)
-        """
-        pitch = np.arcsin(-gx) * (180.0 / np.pi)  # tilt forward/backward
-        roll = np.arctan2(gy, gz) * (180.0 / np.pi)  # tilt left/right
-        return pitch, roll
-
-    def angle_with_vertical(self, gz):
-        """
-        Compute the angle between the gravity unit vector and the Z axis.
-
-        Args:
-            gz: Z component of unit gravity vector.
-
-        Returns:
-            float: Angle in degrees between gravity and Z-axis (i.e.,
-            device tilt).
-        """
-        dot_product = gz  # since Z-axis unit vector is (0, 0, 1)
-        angle_rad = np.arccos(dot_product)
-        return np.degrees(angle_rad)
-
 
 class IMU_BNO085(IMU):
     """
@@ -277,31 +277,3 @@ class IMU_BNO085(IMU):
         if mag == 0:
             raise ValueError("Zero-magnitude vector")
         return [x / mag for x in v]
-
-    def get_pitch_roll_from_gravity(self, gx, gy, gz):
-        """
-        Compute pitch and roll from the gravity vector.
-
-        Args:
-            gx, gy, gz (float): Gravity components
-
-        Returns:
-            tuple: (pitch_deg, roll_deg)
-        """
-        pitch = np.degrees(np.arcsin(-gx))
-        roll = np.degrees(np.arctan2(gy, gz))
-        return pitch, roll
-
-    def angle_with_vertical(self, gz):
-        """
-        Compute angle from vertical using the Z-component of a unit
-        gravity vector.
-
-        Args:
-            gz (float): Z-component of a normalized vector
-
-        Returns:
-            float: Angle from vertical in degrees
-        """
-        angle_rad = np.arccos(np.clip(gz, -1.0, 1.0))
-        return np.degrees(angle_rad)
