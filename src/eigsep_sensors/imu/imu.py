@@ -237,6 +237,15 @@ class IMU_BNO085(IMU):
         data["unix_time"] = time.time()
 
         return data
+    
+    def _request_imu(self, cal=False):
+        """
+        Send a 'REQ' or 'CAL' signal over serial to request sensor data.
+        """
+        if cal:
+            self.ser.write(b"CAL\n")
+        else:
+            super()._request_imu()
 
     def quaternion_to_euler(self, q):
         """
