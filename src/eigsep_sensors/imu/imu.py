@@ -3,6 +3,7 @@ import serial
 import time
 import numpy as np
 
+
 class IMU(ABC):
     """
     Base class for IMU (Inertial Measurement Unit) sensors.
@@ -41,13 +42,19 @@ class IMU(ABC):
         if not response:
             return None
         return self._parse_line(response)
-    
+
     @abstractmethod
     def _parse_line(self, line):
         """
         Filled in subclasses.
+
+        Args:
+            line (str): Raw string returned by the sensor.
+
+        Returns:
+            dict: Parsed data with keys specific to the sensor.
+
         """
-        pass
 
     def close(self):
         """
@@ -55,7 +62,7 @@ class IMU(ABC):
         """
         self.ser.close()
 
-    
+
 class IMU_MMA8451(IMU):
     """
     IMU class for the Adafruit MMA8451 accelerometer sensor over I2C.
@@ -72,27 +79,33 @@ class IMU_MMA8451(IMU):
             line (str): Raw string returned by the sensor.
 
         Returns:
-            dict: Parsed data with keys like x, y, z, etc.
+            dict: Parsed data with keys x, y, z, orientation, and unix_time.
+
+        Raises:
+            ValueError: If the line does not contain exactly 4 parts.
+
         """
-        try:
-            parts = line.strip().split(",")
-            if len(parts) != 4:
-                return None
-            x = float(parts[0])
-            y = float(parts[1])
-            z = float(parts[2])
-            orientation = int(parts[3])
-            return x, y, z, orientation, time.time()
-        except Exception as e:
-            print("[MMA8451] Parse error:", e)
-            return None
-        
+        parts = line.strip().split(",")
+        if len(parts) != 4:
+            raise ValueError(
+                "Expected 4 parts in the line: x, y, z, orientation"
+            )
+        return {
+            "x": float(parts[0]),
+            "y": float(parts[1]),
+            "z": float(parts[2]),
+            "orientation": int(parts[3]),
+            "unix_time": time.time(),
+        }
+
     def calculate_orientation(self, x, y, z):
         """
-        Calculate the orientation angles (theta and phi) based on 3D acceleration data.
+        Calculate the orientation angles (theta and phi) based on 3D
+        acceleration data.
 
-        This function computes the azimuthal angle (theta) and polar angle (phi)
-        from the given x, y, and z acceleration components using the arctangent function.
+        This function computes the azimuthal angle (theta) and polar
+        angle (phi) from the given x, y, and z acceleration components
+        using the arctangent function.
 
         Args:
             x (float): The acceleration along the X axis.
@@ -109,26 +122,33 @@ class IMU_MMA8451(IMU):
         theta_deg = np.degrees(theta)
         phi_deg = np.degrees(phi)
         return theta_deg, phi_deg
-    
+
     def get_orientation_unit_vector(self, x, y, z):
         """
-        Normalize the gravity vector (x, y, z) from the accelerometer to get orientation.
+        Normalize the gravity vector (x, y, z) from the accelerometer
+        to get orientation.
 
         Args:
             x, y, z (float): Raw accelerometer readings.
 
         Returns:
-            dict: Unit vector showing device orientation with respect to gravity.
+            dict: Unit vector showing device orientation with respect
+            to gravity.
+
+        Raises:
+            ValueError: If the magnitude of the gravity vector is zero.
+
         """
         g_mag = np.sqrt(x**2 + y**2 + z**2)
         if g_mag == 0:
             raise ValueError("Zero-magnitude gravity vector.")
 
-        return x/g_mag, y/g_mag, z/g_mag
-    
+        return x / g_mag, y / g_mag, z / g_mag
+
     def get_pitch_roll_from_unit_vector(self, gx, gy, gz):
         """
-        Calculate pitch and roll angles (in degrees) from a normalized gravity vector.
+        Calculate pitch and roll angles (in degrees) from a normalized
+        gravity vector.
 
         Args:
             gx, gy, gz (float): Components of the unit gravity vector.
@@ -139,7 +159,7 @@ class IMU_MMA8451(IMU):
         pitch = np.arcsin(-gx) * (180.0 / np.pi)  # tilt forward/backward
         roll = np.arctan2(gy, gz) * (180.0 / np.pi)  # tilt left/right
         return pitch, roll
-    
+
     def angle_with_vertical(self, gz):
         """
         Compute the angle between the gravity unit vector and the Z axis.
@@ -148,11 +168,13 @@ class IMU_MMA8451(IMU):
             gz: Z component of unit gravity vector.
 
         Returns:
-            float: Angle in degrees between gravity and Z-axis (i.e., device tilt).
+            float: Angle in degrees between gravity and Z-axis (i.e.,
+            device tilt).
         """
         dot_product = gz  # since Z-axis unit vector is (0, 0, 1)
         angle_rad = np.arccos(dot_product)
         return np.degrees(angle_rad)
+
 
 class IMU_BNO085(IMU):
     """
@@ -170,7 +192,17 @@ class IMU_BNO085(IMU):
             line (str): Raw serial line from Pico.
 
         Returns:
-            tuple: (quaternion, accel, lin_accel, gyro, mag, gravity, steps, stab)
+            dict: Data. Keys are
+                'q': quaternion,
+                'a': acceleration,
+                'la': linear_acceleration,
+                'g': gyro,
+                'm': mag,
+                'grav': gravity,
+                'steps': steps,
+                'stab': stab
+            If the line cannot be parsed, the key will not be present.
+
         """
         parts = line.strip().split(",")
         data = {}
@@ -185,28 +217,17 @@ class IMU_BNO085(IMU):
                 elif key == "stab":
                     data[key] = values[0]
             except Exception as e:
-                print(f"[IMU_BNO085] Parse error: {e}")
-                return None, None, None, None, None, None, None, None
+                print(f"[IMU_BNO085] Parse error for {part}: {e}")
 
-        # Unpack in expected order
-        return (
-            data.get("q"),     # quaternion
-            data.get("a"),     # accel
-            data.get("la"),    # linear accel
-            data.get("g"),     # gyro
-            data.get("m"),     # magnetometer
-            data.get("grav"),  # gravity
-            data.get("steps"), # step count
-            data.get("stab")   # stability
-        )
+        return data
 
     def quaternion_to_euler(self, q):
         """
         Convert a quaternion into Euler angles (roll, pitch, yaw).
-        
+
         Args:
             q (list): Quaternion [x, y, z, w]
-        
+
         Returns:
             tuple: (roll, pitch, yaw) in degrees
         """
@@ -259,7 +280,8 @@ class IMU_BNO085(IMU):
 
     def angle_with_vertical(self, gz):
         """
-        Compute angle from vertical using the Z-component of a unit gravity vector.
+        Compute angle from vertical using the Z-component of a unit
+        gravity vector.
 
         Args:
             gz (float): Z-component of a normalized vector
