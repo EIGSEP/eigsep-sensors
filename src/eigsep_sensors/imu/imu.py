@@ -232,6 +232,7 @@ class IMU_BNO085(IMU):
                     data[key] = values[0]
             except Exception as e:
                 print(f"[IMU_BNO085] Parse error for {part}: {e}")
+        data["unix_time"] = time.time()
 
         return data
 
