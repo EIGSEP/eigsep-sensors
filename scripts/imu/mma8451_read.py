@@ -1,11 +1,13 @@
 import time
 import json
 import os
+import board
+import adafruit_mma8451
 import eigsep_sensors as eig
 
 # === Setup ===
 
-accelerometer = eig.IMU_MMA8451()
+accelerometer = eig.IMU_MMA8451(port=None, sensor=True)
 stored_data = []
 
 # === Main Loop ===
