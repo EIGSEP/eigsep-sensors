@@ -16,7 +16,7 @@ header = {
 cnt = 0
 while True:
     try:
-        data = imu.read()
+        data = imu.read_imu()
     except Exception as e:
         print("Error:", e)
         data = None
