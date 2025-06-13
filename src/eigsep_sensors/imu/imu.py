@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 import serial
 import time
 import numpy as np
+import board
+import adafruit_mma8451
 
 
 class IMU(ABC):
@@ -15,13 +17,16 @@ class IMU(ABC):
 
     def __init__(self, port, timeout=1):
         """
-        Initialize the BNO085 sensor over a serial connection.
+        Initialize the IMU over a serial connection.
 
         Args:
             port (str): Serial port to which the sensor is connected.
             timeout (int or float): Read timeout in seconds.
         """
-        self.ser = serial.Serial(port=port, baudrate=115200, timeout=timeout)
+        if port is None:
+            return
+        else:
+            self.ser = serial.Serial(port=port, baudrate=115200, timeout=timeout)
 
     def _request_imu(self):
         """
@@ -69,7 +74,16 @@ class IMU_MMA8451(IMU):
 
     Inherits from IMU, but uses I2C instead of serial. This class initializes
     the I2C bus and sets up the sensor for acceleration measurements.
+
+    Additional Arg:
+    sensor (boolean): Optional arg if sensor is directly connected to Pi instead of to Pico.
     """
+
+    def __init__(self, port, timeout=1, sensor=False):
+        super().__init__()
+        if sensor:
+            i2c = board.I2C()
+            self.sensor = adafruit_mma8451.MMA8451(i2c)
 
     def _parse_line(self, line):
         """
