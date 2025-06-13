@@ -17,7 +17,7 @@ from adafruit_bno08x import (
 )
 
 # Setup I2C
-i2c = busio.I2C(board.GP1, board.GP0)
+i2c = busio.I2C(board.GP1, board.GP0, frequency=800000)
 while not i2c.try_lock:
     time.sleep(0.1)
 
@@ -33,6 +33,20 @@ imu.enable_feature(BNO_REPORT_GRAVITY)
 imu.enable_feature(BNO_REPORT_STEP_COUNTER)
 imu.enable_feature(BNO_REPORT_STABILITY_CLASSIFIER)
 
+def calibrate_imu():
+    print("Starting calibration...")
+    imu.begin_calibration()
+    time.sleep(1)
+
+    while True:
+        status = imu.calibration_status
+        print(f"Calibration status: {status} (0=Unreliable, 3=Fully calibrated)")
+        if status == 3:
+            print("Fully calibrated. Saving...")
+            imu.save_calibration_data()
+            print("Calibration data saved.")
+            break
+        time.sleep(1)
 
 def read_and_format_imu_data():
     try:
@@ -60,10 +74,11 @@ def read_and_format_imu_data():
     except Exception as e:
         return f"ERR:{str(e)}"
 
-
 # === Main loop ===
 while True:
     line = sys.stdin.readline().strip()
+    if line == "CAL":
+        calibrate_imu()
     if line == "REQ":
         print(read_and_format_imu_data())
     time.sleep(0.5)
