@@ -271,9 +271,7 @@ class IMU_BNO085(IMU):
             v (list): Vector [x, y, z]
 
         Returns:
-            list: Normalized vector [x_unit, y_unit, z_unit]
+            np.ndarray: Normalized vector [x_unit, y_unit, z_unit]
         """
         mag = np.linalg.norm(v)
-        if mag == 0:
-            raise ValueError("Zero-magnitude vector")
-        return [x / mag for x in v]
+        return np.array(v) / mag
