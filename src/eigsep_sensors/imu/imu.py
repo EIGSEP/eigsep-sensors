@@ -80,7 +80,7 @@ class IMU_MMA8451(IMU):
     """
 
     def __init__(self, port, timeout=1, sensor=False):
-        super().__init__()
+        super().__init__(port=port, timeout=timeout)
         if sensor:
             i2c = board.I2C()
             self.sensor = adafruit_mma8451.MMA8451(i2c)
