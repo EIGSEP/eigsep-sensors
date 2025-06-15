@@ -144,7 +144,8 @@ class IMU_MMA8451(IMU):
             "unix_time": time.time(),
         }
 
-    def calculate_orientation(self, x, y, z):
+    @staticmethod
+    def calculate_orientation(x, y, z):
         """
         Calculate the orientation angles (theta and phi) based on 3D
         acceleration data.
@@ -169,7 +170,8 @@ class IMU_MMA8451(IMU):
         phi_deg = np.degrees(phi)
         return theta_deg, phi_deg
 
-    def get_orientation_unit_vector(self, x, y, z):
+    @staticmethod
+    def get_orientation_unit_vector(x, y, z):
         """
         Normalize the gravity vector (x, y, z) from the accelerometer
         to get orientation.
@@ -178,7 +180,7 @@ class IMU_MMA8451(IMU):
             x, y, z (float): Raw accelerometer readings.
 
         Returns:
-            dict: Unit vector showing device orientation with respect
+            tuple: Unit vector showing device orientation with respect
             to gravity.
 
         Raises:
@@ -237,17 +239,23 @@ class IMU_BNO085(IMU):
         data["unix_time"] = time.time()
 
         return data
-    
+
     def _request_imu(self, cal=False):
         """
         Send a 'REQ' or 'CAL' signal over serial to request sensor data.
+
+        Args:
+            cal (bool): If True, sends 'CAL' command to calibrate the sensor.
+                        If False, sends 'REQ' to request data.
+
         """
         if cal:
             self.ser.write(b"CAL\n")
         else:
             super()._request_imu()
 
-    def quaternion_to_euler(self, q):
+    @staticmethod
+    def quaternion_to_euler(q):
         """
         Convert a quaternion into Euler angles (roll, pitch, yaw).
 
@@ -275,7 +283,8 @@ class IMU_BNO085(IMU):
 
         return np.degrees(roll), np.degrees(pitch), np.degrees(yaw)
 
-    def normalize_vector(self, v):
+    @staticmethod
+    def normalize_vector(v):
         """
         Normalize a 3D vector.
 
