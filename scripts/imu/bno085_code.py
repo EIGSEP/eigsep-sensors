@@ -71,11 +71,12 @@ def read_and_format_imu_data():
 
     Possible 'stab' Values:
     -----------------------
-    "Unknown"     – Sensor cannot classify stability
-    "On Table"    – At rest on a stable surface with minimal vibration
-    "Stationary"  – Low motion but stable time requirement not yet met
-    "Stable"      – Motion is below threshold and stability duration achieved
-    "In motion"   – Sensor is actively moving
+    "Unknown"     - Sensor cannot classify stability
+    "On Table"    - At rest on a stable surface with minimal vibration
+    "Stationary"  - Low motion but stable time requirement not yet met
+    "Stable"      - Motion is below threshold and stability duration achieved
+    "In motion"   - Sensor is actively moving
+
     """
 
     try:
