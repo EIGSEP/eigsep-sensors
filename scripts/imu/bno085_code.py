@@ -50,7 +50,7 @@ def calibrate_imu():
 
 def read_and_format_imu_data():
     """
-    IMU Output Format for BNO085 (via serial):
+    IMU Output Format for BNO085:
 
     Each output line is a comma-separated string containing labeled sensor readings.
     Each key is followed by its corresponding values, separated by colons.
@@ -58,25 +58,46 @@ def read_and_format_imu_data():
     Key Format and Data Types:
     --------------------------
 
-    q     : Quaternion orientation [qx:qy:qz:qw]           -> List[float] (length 4)
-    a     : Accelerometer [ax:ay:az]                       -> List[float] (length 3)
+    q     : Rotation vector quaternion [qx:qy:qz:qw]       -> List[float] (length 4)
+            Absolute orientation expressed as a unit quaternion.
+            Provides accurate rotation without gimbal lock. Used for 3D tracking, AR/VR, and heading.
+
+    a     : Acceleration [ax:ay:az]                       -> List[float] (length 3)
+            Raw accelerometer output in m/s^2 including both gravity and linear motion.
+
     la    : Linear acceleration [la_x:la_y:la_z]           -> List[float] (length 3)
+            Gravity-compensated acceleration in m/s^2.
+            Represents only movement-related forces - ideal for gesture or motion tracking.
+
     g     : Gyroscope / angular velocity [gx:gy:gz]        -> List[float] (length 3)
-    m     : Magnetometer [mx:my:mz]                        -> List[float] (length 3)
+            Measures rate of rotation around each axis in rad/s.
+
+    m     : Magnetometer / magnetic field [mx:my:mz]       -> List[float] (length 3)
+            Magnetic field strength in microtesla (mu*T). Useful for compass heading or field mapping.
+
     grav  : Gravity vector [gxv:gyv:gzv]                   -> List[float] (length 3)
+            Isolated gravitational force in m/s^2 - shows Earth's gravity direction and tilt.
+            Complementary to `linear_acceleration`.
+
     steps : Step counter                                   -> int  
-            Number of steps detected since the sensor was initialized or powered on.
-            This value is cumulative and starts from zero each time the device resets.
+            Number of walking or running steps detected since the sensor was initialized.
+            Step detection is based on repetitive motion patterns and resets to zero on power-up.
+
     stab  : Stability classification                       -> str or None
+            Sensor's assessment of current motion state.
 
-    Possible 'stab' Values:
-    -----------------------
-    "Unknown"     - Sensor cannot classify stability
-    "On Table"    - At rest on a stable surface with minimal vibration
-    "Stationary"  - Low motion but stable time requirement not yet met
-    "Stable"      - Motion is below threshold and stability duration achieved
-    "In motion"   - Sensor is actively moving
+            Possible values:
+            - "Unknown"     - Unable to determine stability
+            - "On Table"    - Stationary on a flat surface
+            - "Stationary"  - Minimal movement, but duration threshold not met
+            - "Stable"      - Movement below threshold for long enough
+            - "In motion"   - Device is moving
 
+    Example Output Line:
+    --------------------
+    q:0.123:0.456:0.789:0.012,a:0.01:0.02:0.03,la:0.00:0.00:0.01,
+    g:0.12:0.13:0.14,m:0.23:0.24:0.25,grav:0.00:0.00:1.00,
+    steps:42,stab:Stable
     """
 
     try:
