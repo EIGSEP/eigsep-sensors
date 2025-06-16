@@ -49,6 +49,35 @@ def calibrate_imu():
         time.sleep(1)
 
 def read_and_format_imu_data():
+    """
+    IMU Output Format for BNO085 (via serial):
+
+    Each output line is a comma-separated string containing labeled sensor readings.
+    Each key is followed by its corresponding values, separated by colons.
+
+    Key Format and Data Types:
+    --------------------------
+
+    q     : Quaternion orientation [qx:qy:qz:qw]           -> List[float] (length 4)
+    a     : Accelerometer [ax:ay:az]                       -> List[float] (length 3)
+    la    : Linear acceleration [la_x:la_y:la_z]           -> List[float] (length 3)
+    g     : Gyroscope / angular velocity [gx:gy:gz]        -> List[float] (length 3)
+    m     : Magnetometer [mx:my:mz]                        -> List[float] (length 3)
+    grav  : Gravity vector [gxv:gyv:gzv]                   -> List[float] (length 3)
+    steps : Step counter                                   -> int  
+            Number of steps detected since the sensor was initialized or powered on.
+            This value is cumulative and starts from zero each time the device resets.
+    stab  : Stability classification                       -> str or None
+
+    Possible 'stab' Values:
+    -----------------------
+    "Unknown"     – Sensor cannot classify stability
+    "On Table"    – At rest on a stable surface with minimal vibration
+    "Stationary"  – Low motion but stable time requirement not yet met
+    "Stable"      – Motion is below threshold and stability duration achieved
+    "In motion"   – Sensor is actively moving
+    """
+
     try:
         qx, qy, qz, qw = imu.quaternion
         ax, ay, az = imu.acceleration
