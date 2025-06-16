@@ -239,8 +239,10 @@ class IMU_BNO085(IMU):
                     data[key] = values[0]
             except Exception as e:
                 print(f"[IMU_BNO085] Parse error for {part}: {e}")
+        if "q" in data:
+            data["euler"] = self.quaternion_to_euler(data["q"])    
         data["unix_time"] = time.time()
-
+        
         return data
 
     def _request_imu(self, cal=False):
