@@ -221,7 +221,7 @@ class IMU_BNO085(IMU):
                 'm': mag,
                 'grav': gravity,
                 'steps': steps,
-                'stab': stab
+                'stab': stability
             If the line cannot be parsed, the key will not be present.
 
         """
