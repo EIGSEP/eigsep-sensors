@@ -23,12 +23,7 @@ class IMU(ABC):
             port (str): Serial port to which the sensor is connected.
             timeout (int or float): Read timeout in seconds.
         """
-        if port is None:
-            return
-        else:
-            self.ser = serial.Serial(
-                port=port, baudrate=115200, timeout=timeout
-            )
+        self.ser = serial.Serial(port=port, baudrate=115200, timeout=timeout)
 
     def _request_imu(self):
         """
@@ -104,18 +99,26 @@ class IMU_MMA8451(IMU):
     """
     IMU class for the Adafruit MMA8451 accelerometer sensor over I2C.
 
-    Inherits from IMU, but uses I2C instead of serial. This class initializes
-    the I2C bus and sets up the sensor for acceleration measurements.
-
-    Additional Arg:
-    sensor (boolean): Optional arg if sensor is directly connected to Pi instead of to Pico.
     """
 
-    def __init__(self, port, timeout=1, sensor=False):
-        super().__init__(port=port, timeout=timeout)
+    def __init__(self, port=None, timeout=1, sensor=False):
+        """
+        Initialize the MMA8451 IMU sensor.
+
+        Args:
+            port (str): Serial port to which the sensor is connected.
+            timeout (int or float): Read timeout in seconds.
+            sensor (bool): If True, initializes the sensor over I2C.
+                This is useful if the sensor is directly connected to
+                the Raspberry Pi. Otherwise, connects over to a Pico
+                that communicates with the sensor.
+
+        """
         if sensor:
             i2c = board.I2C()
             self.sensor = adafruit_mma8451.MMA8451(i2c)
+        else:
+            super().__init__(port=port, timeout=timeout)
 
     def _parse_line(self, line):
         """
