@@ -256,6 +256,20 @@ class IMU_BNO085(IMU):
             self.ser.write(b"CAL\n")
         else:
             super()._request_imu()
+    
+    def read_imu(self, cal=False):
+        """
+        Request and read data from the IMU via serial.
+
+        Returns:
+            dict or None: Parsed data as a dictionary if successful,
+                          otherwise None if no data is returned.
+        """
+        self._request_imu(cal)
+        response = self.ser.readline().decode().strip()
+        if not response:
+            return None
+        return self._parse_line(response)
 
     @staticmethod
     def quaternion_to_euler(q):
