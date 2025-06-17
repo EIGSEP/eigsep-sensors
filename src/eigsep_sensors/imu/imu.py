@@ -63,24 +63,18 @@ class IMU(ABC):
         Closes serial connection.
         """
         self.ser.close()
-
+    
     @staticmethod
     def get_pitch_roll_from_gravity(gx, gy, gz):
-        """
-        Compute pitch and roll from gravity vector components.
+        pitch = np.degrees(np.arcsin(-gx / np.linalg.norm([gx, gy, gz])))
+        roll = np.degrees(np.arctan2(gy, gz))
 
-        Args:
-            gx, gy, gz (float): Gravity vector components (not necessarily unit length)
+        # Normalize roll to [-90, +90]
+        if roll > 90:
+            roll -= 180
+        elif roll < -90:
+            roll += 180
 
-        Returns:
-            tuple: (pitch_deg, roll_deg)
-        """
-        norm = np.sqrt(gx**2 + gy**2 + gz**2)
-        if norm == 0:
-            return float("nan"), float("nan")
-        gx_n, gy_n, gz_n = gx / norm, gy / norm, gz / norm
-        pitch = np.degrees(np.arcsin(-gx_n))
-        roll = np.degrees(np.arctan2(gy_n, gz_n))
         return pitch, roll
 
     @staticmethod
