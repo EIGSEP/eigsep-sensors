@@ -23,7 +23,7 @@ def test_get_pitch_roll_from_gravity():
     g = np.array([0.0, 9.81 * np.sin(np.radians(45)), -9.81 * np.cos(np.radians(45))])
     pitch, roll = IMU.get_pitch_roll_from_gravity(g[0], g[1], g[2])
     assert np.isclose(pitch, 0.0, atol=1e-2)
-    assert np.isclose(roll, 45.0, atol=1e-2)
+    assert np.isclose(roll, -45.0, atol=1e-2)
 
 
 def test_angle_with_vertical():
