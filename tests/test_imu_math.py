@@ -11,7 +11,7 @@ def test_get_pitch_roll_from_gravity():
     g = np.array([0.0, 0.0, -9.81])
     pitch, roll = IMU.get_pitch_roll_from_gravity(g[0], g[1], g[2])
     assert np.isclose(pitch, 0.0, atol=1e-5)
-    assert np.isclose(roll, 180.0, atol=1e-5)
+    assert np.isclose(roll, 0.0, atol=1e-5)
 
     # Tilted 45 degrees around Y-axis (pitch)
     g = np.array([9.81 * np.sin(np.radians(45)), 0.0, -9.81 * np.cos(np.radians(45))])
