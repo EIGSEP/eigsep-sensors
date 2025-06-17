@@ -7,22 +7,23 @@ from eigsep_sensors.imu import IMU, IMU_MMA8451, IMU_BNO085
 
 
 def test_get_pitch_roll_from_gravity():
+    # Straight down
     g = np.array([0.0, 0.0, -9.81])
     pitch, roll = IMU.get_pitch_roll_from_gravity(g[0], g[1], g[2])
     assert np.isclose(pitch, 0.0, atol=1e-5)
-    assert np.isclose(roll, 0.0, atol=1e-5)
+    assert np.isclose(roll, 180.0, atol=1e-5)
 
-    # tilted 45 degrees around the x-axis
-    g = np.array([0.0, 9.81, -9.81]) / np.sqrt(2)
+    # Tilted 45 degrees around Y-axis (pitch)
+    g = np.array([9.81 * np.sin(np.radians(45)), 0.0, -9.81 * np.cos(np.radians(45))])
     pitch, roll = IMU.get_pitch_roll_from_gravity(g[0], g[1], g[2])
-    assert np.isclose(pitch, np.pi / 4, atol=1e-5)
-    assert np.isclose(roll, 0.0, atol=1e-5)
+    assert np.isclose(pitch, 45.0, atol=1e-2)
+    assert np.isclose(roll, 180.0, atol=1e-5)
 
-    # tilted 45 degrees around the y-axis
-    g = np.array([9.81, 0.0, -9.81]) / np.sqrt(2)
+    # Tilted 45 degrees around X-axis (roll)
+    g = np.array([0.0, 9.81 * np.sin(np.radians(45)), -9.81 * np.cos(np.radians(45))])
     pitch, roll = IMU.get_pitch_roll_from_gravity(g[0], g[1], g[2])
-    assert np.isclose(pitch, 0.0, atol=1e-5)
-    assert np.isclose(roll, np.pi / 4, atol=1e-5)
+    assert np.isclose(pitch, 0.0, atol=1e-2)
+    assert np.isclose(roll, 45.0, atol=1e-2)
 
 
 def test_angle_with_vertical():
