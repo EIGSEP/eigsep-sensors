@@ -69,11 +69,7 @@ class IMU(ABC):
         pitch = np.degrees(np.arcsin(-gx / np.linalg.norm([gx, gy, gz])))
         roll = np.degrees(np.arctan2(gy, gz))
 
-        # Normalize roll to [-90, +90]
-        if roll > 90:
-            roll -= 180
-        elif roll < -90:
-            roll += 180
+        roll = ((roll + 90) % 180) - 90
 
         return pitch, roll
 
