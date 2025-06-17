@@ -27,7 +27,7 @@ def test_get_pitch_roll_from_gravity():
     assert np.isclose(roll, -45.0, atol=1e-2)
 
     # Case where roll > 90 -> should wrap to negative
-    g = np.array([0.0, 9.81 * np.sin(np.radians(95)), -9.81 * np.cos(np.radians(95))])
+    g = np.array([0.0, 9.81 * np.sin(np.radians(95)), 9.81 * np.cos(np.radians(95))])
     pitch, roll = IMU.get_pitch_roll_from_gravity(g[0], g[1], g[2])
     print(pitch, roll)
     assert np.isclose(pitch, 0.0, atol=1e-2)
@@ -36,6 +36,7 @@ def test_get_pitch_roll_from_gravity():
     # Case where roll < -90 -> should wrap to positive
     g = np.array([0.0, -9.81 * np.sin(np.radians(95)), -9.81 * np.cos(np.radians(95))])
     pitch, roll = IMU.get_pitch_roll_from_gravity(g[0], g[1], g[2])
+    print(pitch, roll)
     assert np.isclose(pitch, 0.0, atol=1e-2)
     assert np.isclose(roll, 85.0, atol=1e-2)
 
