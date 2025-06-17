@@ -29,6 +29,7 @@ def test_get_pitch_roll_from_gravity():
     # Case where roll > 90 -> should wrap to negative
     g = np.array([0.0, 9.81 * np.sin(np.radians(95)), -9.81 * np.cos(np.radians(95))])
     pitch, roll = IMU.get_pitch_roll_from_gravity(g[0], g[1], g[2])
+    print(pitch, roll)
     assert np.isclose(pitch, 0.0, atol=1e-2)
     assert np.isclose(roll, -85.0, atol=1e-2)
 
@@ -61,7 +62,7 @@ def test_get_orientation_unit_vector():
     assert np.isclose(uy, 0.8)
     assert np.isclose(uz, 0.0)
     with pytest.raises(ValueError, match="Zero-magnitude gravity vector."):
-        IMU.get_orientation_unit_vector(0.0, 0.0, 0.0)
+        IMU_MMA8451.get_orientation_unit_vector(0.0, 0.0, 0.0)
 
 
 def test_quaternion_to_euler():
