@@ -25,8 +25,8 @@ def sample_values():
     Typical values for the BNO085 IMU. See the bno085_code.py.
     """
     return {
-        "q": np.array([0.7071, 0.0, 0.7071, 0.0]),  # quaternion (x, y, z, w)
-        "euler": np.array(IMU_BNO085.quaternion_to_euler(np.array([0.7071, 0.0, 0.7071, 0.0]))), # euler
+        "q": np.array([0.707, 0.0, 0.707, 0.0]),  # quaternion (x, y, z, w)
+        "euler": np.array(IMU_BNO085.quaternion_to_euler(np.array([0.707, 0.0, 0.707, 0.0]))), # euler
         "a": np.array([0.0, 0.0, -9.81]),  # acceleration vector
         "la": np.array([0.0, 0.0, -9.81]),  # linear acceleration vector
         "g": np.array([0.0, 0.0, 0.0]),  # gyroscope vector

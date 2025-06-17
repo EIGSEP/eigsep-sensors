@@ -67,16 +67,20 @@ class IMU(ABC):
     @staticmethod
     def get_pitch_roll_from_gravity(gx, gy, gz):
         """
-        Compute pitch and roll from the gravity vector.
+        Compute pitch and roll from gravity vector components.
 
         Args:
-            gx, gy, gz (float): Gravity components
+            gx, gy, gz (float): Gravity vector components (not necessarily unit length)
 
         Returns:
             tuple: (pitch_deg, roll_deg)
         """
-        pitch = np.degrees(np.arcsin(-gx))
-        roll = np.degrees(np.arctan2(gy, gz))
+        norm = np.sqrt(gx**2 + gy**2 + gz**2)
+        if norm == 0:
+            return float("nan"), float("nan")
+        gx_n, gy_n, gz_n = gx / norm, gy / norm, gz / norm
+        pitch = np.degrees(np.arcsin(-gx_n))
+        roll = np.degrees(np.arctan2(gy_n, gz_n))
         return pitch, roll
 
     @staticmethod
@@ -242,7 +246,7 @@ class IMU_BNO085(IMU):
         if "q" in data:
             data["euler"] = self.quaternion_to_euler(data["q"])    
         data["unix_time"] = time.time()
-        
+
         return data
 
     def _request_imu(self, cal=False):
