@@ -3,7 +3,6 @@ import pytest
 import time
 
 from mockserial import create_serial_connection
-
 from eigsep_sensors.imu import IMU_BNO085
 
 
