@@ -26,7 +26,7 @@ dependencies = [
   "smbus2",
   "adafruit-circuitpython-mma8451",
   "adafruit-circuitpython-bno08x",
-  "adafruit-blinka==8.58.1"
+  "adafruit-blinka==8.58.1",
   "board",
   "mockserial @ git+https://github.com/christianhbye/mockserial.git"
 ]
