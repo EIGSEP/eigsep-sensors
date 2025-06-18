@@ -24,6 +24,7 @@ dependencies = [
   "numpy",
   "mpremote",
   "adafruit-circuitpython-mma8451",
+  "adafruit-circuitpython-bno08x",
   "board",
   "mockserial @ git+https://github.com/christianhbye/mockserial.git"
 ]
