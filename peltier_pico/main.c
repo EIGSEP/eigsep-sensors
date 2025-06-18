@@ -100,13 +100,18 @@ void usb_serial_request_reply(void) {
                 break;        
                 
             } else if (line[0] != '\0') {
-                // printf("ERR: unknown cmd: %s\r\n", line);
-                host_cmd_execute(line, &hb);                     // enables run-time commands
+                // enables run-time commands
+		host_cmd_execute(line, &hb); 
             }
             
-        } else if (idx < (int)sizeof(line) - 1) { 
-            line[idx++] = (char)ch;              
-        }
+        } else {
+	    if (idx < (int)sizeof(line) - 1) { 
+                line[idx++] = (char)ch;              
+            } else {
+		// printf("ERR: command too long.\r\n");
+		idx = 0; // reset index if line is too long
+	    }
+	}
     }
 }
 
