@@ -138,9 +138,9 @@ void hbridge_smart_drive(HBridge *hb) {
     // Calculate drive level and direction
     dT_now = hb->T_target - hb->T_now;
     if (dT_Now > 0.1) {
-	hb->drive = -0.2; // XXX is this right?
+	hb->drive = -0.2;
     } else if (dT_now < -0.1) {
-	hb->drive = 0.2; // XXX is this right?
+	hb->drive = 0.2;
     } else {
 	hb->drive = 0.0; // no drive needed
     }
