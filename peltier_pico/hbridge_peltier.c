@@ -48,6 +48,13 @@ void hbridge_update_T(HBridge *hb, time_t t_now, float T_now) {
     hb->t_now = t_now;
 }
 
+// clamp the drive level to the range [-max, max] to cap power
+static inline float clamp_drive(float drive, float max) {
+    if (drive > max) return max;
+    if (drive < -max) return -max;
+    return drive;
+}
+
 // // === Testing PID control ===
 // float hbridge_pid_compute(HBridge *hb, float setpoint, float measured, float dt) {
 //     float error = setpoint - measured;
@@ -57,13 +64,7 @@ void hbridge_update_T(HBridge *hb, time_t t_now, float T_now) {
 //     hb->pid_prev_error = error;
 //         
 //     // clamp output to +/- gain, or hb->gain = 0.2; etc...
-//     // NOTE: In hbridge_smart_drive we cap the drive to +/- 0.2, the clamp below
-//     // effectively does the same thing, where hb->gain acts as the maximum allowed drive.
-//     // The purpose of clamping is to stay below a certain power draw given power budget limitations 
-//     // and to maintain stability. 
-//     if (output > hb->gain) output = hb->gain;
-//     if (output < hb->gain) output = -hb->gain;
-//     return output;
+//     clamp_drive(output, hb->gain);
 // }
 
 // if temp deviates from setpoint by dT, hbridge drives back toward setpoint.
@@ -71,14 +72,14 @@ void hbridge_hysteresis_drive(HBridge *hb) {
     
     float error = hb->T_target - hb->T_now;
     
-    if (hb->active) {
-        if (fabsf(error) <= hb->hysteresis) {
+    if (hb->active) {  // currently driving to setpoint
+        if (fabsf(error) <= hb->hysteresis) {  // within hysteresis window
             hb->active = false;                 // goes idle
             hbridge_raw_drive(false, 0);
             hb->drive = 0.0f;
             return;
         }
-        hbridge_smart_drive(hb);
+        hbridge_smart_drive(hb);  // outside deadband, drive to setpoint
     } else {
         // currently on idle - wakes up when we move beyond ∆T
         if (fabsf(error) > hb -> hysteresis) {
@@ -121,37 +122,22 @@ void hbridge_hysteresis_drive(HBridge *hb) {
 //     }
 // }
 
-
 // Drive the hbridge
 void hbridge_smart_drive(HBridge *hb) {
     float dT_now, dT_prev;
-    float dT_dt;
-
+    
     // Calculate drive level and direction
     dT_now = hb->T_target - hb->T_now;
-    dT_dt = (hb->T_now - hb->T_prev) / (hb->t_now - hb->t_prev);
-    if (dT_now > 0) {
-        if (dT_now > 0.1) {
-            hb->drive =-0.2;
-        } else {
-            hb->drive = 0.0;
-        }
+    if (dT_Now > 0.1) {
+	hb->drive = -0.2; // XXX is this right?
+    } else if (dT_now < -0.1) {
+	hb->drive = 0.2; // XXX is this right?
     } else {
-        if (dT_now < 0.1) {
-            hb->drive = 0.2;
-        } else {
-            hb->drive = 0.0;
-        }
+	hb->drive = 0.0; // no drive needed
     }
-    
-    // // test
-    // if (0 <= hb->drive < 1e-3) {
-    //    hb->drive = 1e-3;
-    // } else if (-1e-3 < hb->drive) {
-    //    hb->drive = -1e-3;
-    // }
-    // hb->drive *= hb->gain * (dT_now / hb->t_target) / dT_dt;
-    // // end test
+
+    // clamp the drive level to gain
+    hb->drive = clamp_drive(hb->drive, hb->gain);
 
     hbridge_drive(hb);
 }
