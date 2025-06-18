@@ -1,12 +1,23 @@
-# Ignore build folders
+.DS_Store
+
+# Ignore build folder
+peltier_pico/build/
 build/
 dist/
 
+# Ignore CMakeFiles folder
+peltier_pico/CMakeFiles/
+
+# Python bytecode and cache
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Jupyter lab notebook checkpoints
+**/.ipynb_checkpoints/
+
 # Ignore egg-info folders
 *.egg-info/
-
-# Ignore Python bytecode and cache files
-__pycache__/
 
 # virtual environment folders
 .venv/

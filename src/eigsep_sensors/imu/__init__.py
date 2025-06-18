@@ -1,4 +1,4 @@
 __author__ = "EIGSEP Team"
 __version__ = "0.0.1"
 
-from .lidar import Lidar_TFLuna, Lidar_GRF250
+from .imu import IMU, IMU_MMA8451, IMU_BNO085
