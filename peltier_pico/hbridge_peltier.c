@@ -31,6 +31,7 @@ void hbridge_init(HBridge *hb, float T_target, float t_target, float gain) {
     hb->gain = gain;
     hb->hysteresis = 1.0f; // ∆T, fine-tune
     hb->active = true;     // starts as engaged, setpoint achieved once
+    hb->enabled = true;    // starts enabled, can be turned off
     
     // // === PID gain coefficients ===
     // hb->kp = 1.0f;
@@ -71,7 +72,15 @@ static inline float clamp_drive(float drive, float max) {
 void hbridge_hysteresis_drive(HBridge *hb) {
     
     float error = hb->T_target - hb->T_now;
-    
+
+    // check if asked to turn off
+    if (!hb->enabled) {
+	hb->drive = 0.0f;
+	hb->active = false;  // goes idle
+	hbridge_raw_drive(false, 0);
+	return;
+    }
+
     if (hb->active) {  // currently driving to setpoint
         if (fabsf(error) <= hb->hysteresis) {  // within hysteresis window
             hb->active = false;                 // goes idle
