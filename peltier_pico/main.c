@@ -8,6 +8,10 @@ volatile HBridge hb;
 
 // callback for repeating timer 
 bool control_temperature_callback(struct repeating_timer *t) {
+    if (!hb.enabled) {
+	// If the H-bridge is not enabled, do nothing
+	return true; 
+    }
     hbridge_update_T(&hb, time(NULL), read_peltier_thermistor());
     hbridge_hysteresis_drive(&hb);
     return true; 
