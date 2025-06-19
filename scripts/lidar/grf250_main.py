@@ -13,7 +13,7 @@ CMD_ID_PRODUCT_NAME = 0
 CMD_ID_UPDATE_RATE = 74
 
 CONFIG_BITS = 0b01000101  # Enable bits 0, 2, 6 → distance, strength, temp
-UPDATE_HZ = 10
+UPDATE_HZ = 20
 
 i2c = I2C(0, scl=Pin(1), sda=Pin(0), freq=100_000)
 
