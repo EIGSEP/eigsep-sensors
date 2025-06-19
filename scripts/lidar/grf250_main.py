@@ -132,8 +132,10 @@ dummy_handshake()
 configure_and_save()
 
 while True:
-    result = read_distance_plus()
-    if result:
-        d, s, t = result
-        print(f"{d:.2f},{s},{t:.2f}")
-    time.sleep(0.1)  # 10 Hz loop
+    line = sys.stdin.readline().strip()
+    if line == "REQ":
+        result = read_distance_plus()
+        if result:
+            d, s, t = result
+            print(f"{d:.2f},{s},{t:.2f}")
+        time.sleep(0.1)  # 10 Hz loop
