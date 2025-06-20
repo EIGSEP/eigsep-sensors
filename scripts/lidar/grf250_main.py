@@ -15,7 +15,7 @@ CMD_ID_UPDATE_RATE = 74
 CONFIG_BITS = 0b01000101  # Enable bits 0, 2, 6 → distance, strength, temp
 UPDATE_HZ = 20
 
-i2c = I2C(0, scl=Pin(1), sda=Pin(0), freq=100_000)
+i2c = I2C(0, scl=Pin(0), sda=Pin(1), freq=100_000)
 
 # CRC16 checksum algorithm from manual
 def create_crc(data):
