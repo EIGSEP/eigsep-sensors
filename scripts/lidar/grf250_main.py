@@ -29,10 +29,10 @@ while True:
 
             if len(resp) == 12:
                 # unpack ints: distance raw (4 bytes), strength (4), temp raw (4)
-                dist_raw, strength, temp_raw = struct.unpack('<iii', resp[0:12])
+                dist_raw, strength_dB, temp_raw = struct.unpack('<iii', resp[0:12])
                 distance_m = dist_raw / 10.0
                 temperature_c = temp_raw / 100.0
-                print(f"Distance: {distance_m:.2f} m, Strength: {strength}, Temp: {temperature_c:.2f} °C")
+                print(f"{distance_m:.2f},{strength_dB},{temperature_c:.2f}")
             else:
                 # print raw if invalid
                 print("Unexpected response:", [hex(b) for b in resp])
