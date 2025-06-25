@@ -57,6 +57,7 @@ def pack_values(values):
     return ",".join(
         [
             f"q:{qx:.3f}:{qy:.3f}:{qz:.3f}:{qw:.3f}",
+            f"gq:{gqx:.3f}:{gqy:.3f}:{gqz:.3f}:{gqw:.3f}",
             f"a:{ax:.3f}:{ay:.3f}:{az:.3f}",
             f"la:{la_x:.3f}:{la_y:.3f}:{la_z:.3f}",
             f"g:{gx:.3f}:{gy:.3f}:{gz:.3f}",
