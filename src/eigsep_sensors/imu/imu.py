@@ -225,7 +225,7 @@ class IMU_BNO085(IMU):
         for part in parts:
             try:
                 key, *values = part.split(":")
-                if key in ["q", "a", "la", "g", "m", "grav"]:
+                if key in ["q", "gq", "a", "la", "g", "m", "grav"]:
                     data[key] = [float(v) for v in values]
                 elif key == "steps":
                     data[key] = int(values[0])
@@ -234,7 +234,9 @@ class IMU_BNO085(IMU):
             except Exception as e:
                 print(f"[IMU_BNO085] Parse error for {part}: {e}")
         if "q" in data:
-            data["euler"] = self.quaternion_to_euler(data["q"])    
+            data["euler"] = self.quaternion_to_euler(data["q"])
+        if "gq" in data:
+            data["geuler"] = self.quaternion_to_euler(data["gq"])      
         data["unix_time"] = time.time()
 
         return data

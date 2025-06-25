@@ -30,6 +30,7 @@ imu.enable_feature(BNO_REPORT_GYROSCOPE)
 imu.enable_feature(BNO_REPORT_MAGNETOMETER)
 imu.enable_feature(BNO_REPORT_LINEAR_ACCELERATION)
 imu.enable_feature(BNO_REPORT_ROTATION_VECTOR)
+imu.enable_feature(BNO_REPORT_GAME_ROTATION_VECTOR)
 imu.enable_feature(BNO_REPORT_GRAVITY)
 imu.enable_feature(BNO_REPORT_STEP_COUNTER)
 imu.enable_feature(BNO_REPORT_STABILITY_CLASSIFIER)
@@ -40,8 +41,6 @@ def calibrate_imu():
     time.sleep(1)
 
     # Enable minimal necessary features for calibration feedback
-    imu.enable_feature(BNO_REPORT_MAGNETOMETER)
-    imu.enable_feature(BNO_REPORT_GAME_ROTATION_VECTOR)
 
     calibration_good_at = False
     wanted_mag_status = 2
@@ -101,6 +100,10 @@ def read_and_format_imu_data():
             Absolute orientation expressed as a unit quaternion.
             Provides accurate rotation without gimbal lock. Used for 3D tracking, AR/VR, and heading.
 
+    gq    : Game rotation vector quaternion [gqx:gqy:gqz:gqw]  -> List[float] (length 4)
+            Relative orientation (no magnetometer). Stable, drift-limited rotation tracking.
+            Ideal for fast, smooth motion in AR/VR or gaming. Not referenced to magnetic north.
+
     a     : Acceleration [ax:ay:az]                       -> List[float] (length 3)
             Raw accelerometer output in m/s^2 including both gravity and linear motion.
 
@@ -141,6 +144,7 @@ def read_and_format_imu_data():
 
     try:
         qx, qy, qz, qw = imu.quaternion
+        gqx, gqy, gqz, gqw = imu.game_quaternion
         ax, ay, az = imu.acceleration
         la_x, la_y, la_z = imu.linear_acceleration
         gx, gy, gz = imu.gyro
@@ -152,6 +156,7 @@ def read_and_format_imu_data():
         return ",".join(
             [
                 f"q:{qx:.3f}:{qy:.3f}:{qz:.3f}:{qw:.3f}",
+                f"gq:{gqx:.3f}:{gqy:.3f}:{gqz:.3f}:{gqw:.3f}",
                 f"a:{ax:.3f}:{ay:.3f}:{az:.3f}",
                 f"la:{la_x:.3f}:{la_y:.3f}:{la_z:.3f}",
                 f"g:{gx:.3f}:{gy:.3f}:{gz:.3f}",
