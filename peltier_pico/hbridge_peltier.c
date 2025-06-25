@@ -30,8 +30,8 @@ void hbridge_init(HBridge *hb, float T_target, float t_target, float gain) {
     hb->drive = 0.0;
     hb->gain = gain;
     hb->hysteresis = 1.0f; // ∆T, fine-tune
-    hb->active = false;     // starts as engaged, setpoint achieved once
-    hb->enabled = false;    // initially disabled
+    hb->active = true;     // starts as engaged, setpoint achieved once     ----- "off" if we do not want TEC to run on bootup
+    hb->enabled = true;    // initially disabled                            ----- "off" if we do not want TEC to run on bootup
     
     // // === PID gain coefficients ===
     // hb->kp = 1.0f;

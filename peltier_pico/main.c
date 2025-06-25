@@ -1,34 +1,50 @@
 #include "read_temp.h"
 #include "hbridge_peltier.h"
 #include "runtime_cmd.h"
+// === for ds18b20 thermistor ===
+#include "onewire_library.h"
+#include "onewire_library.pio.h"
+#include "ds18b20.h"
 
-// Global temperature variable
+
+// Global temperature and therm variables
 volatile HBridge hb;
-// HBridge hb;
+#define DS_PIN 22          
+OW ow;                     // 1-wire bus obj
 
-// callback for repeating timer 
 bool control_temperature_callback(struct repeating_timer *t) {
     if (!hb.enabled) {
-	// If the H-bridge is not enabled, do nothing
-	return true; 
+        return true;
     }
-    hbridge_update_T(&hb, time(NULL), read_peltier_thermistor());
+    
+    // hbridge_update_T(&hb, time(NULL), read_peltier_thermistor());
+    hbridge_update_T(&hb, time(NULL), read_ds18b20_celsius());            
     hbridge_hysteresis_drive(&hb);
     return true; 
 }
 
-// Thread to read temperatures and run peltier continuously
 void control_temperature() {
-    adc_init();
-    adc_gpio_init(26);                 // enabling adc 0 on pin 26
-    adc_set_temp_sensor_enabled(true); // reads internal pico temp...
-    
+    uint offset = pio_add_program(pio0, &onewire_program);
+    ow_init(&ow, pio0, offset, DS_PIN);
     struct repeating_timer timer;
-    add_repeating_timer_ms(-500, control_temperature_callback, NULL, &timer); // 0.5s interval, "-" indicates running in the background (core 1)
-    while(true) {
+    add_repeating_timer_ms(-750, control_temperature_callback, NULL, &timer);
+    while (true) {
         tight_loop_contents();
     }
 }
+
+// // Thread to read temperatures and run peltier continuously ------- test
+// void control_temperature() {
+//     adc_init();
+//     adc_gpio_init(26);                 // enabling adc 0 on pin 26
+//     adc_set_temp_sensor_enabled(true); // reads internal pico temp...
+//     
+//     struct repeating_timer timer;
+//     add_repeating_timer_ms(-500, control_temperature_callback, NULL, &timer); // 0.5s interval, "-" indicates running in the background (core 1)
+//     while(true) {
+//         tight_loop_contents();
+//     }
+// }
 
 /// USB Serial Communication | testing communication & duty
 // void usb_serial() {
@@ -67,6 +83,7 @@ void control_temperature() {
 // /// USB serial comms data logger
 void usb_serial_request_reply(void) {
     stdio_init_all();
+    printf("USB serial online.\n");
     setvbuf(stdout, NULL, _IONBF, 0);             // un-buffer stdout
 
     while (!stdio_usb_connected()) tight_loop_contents();
@@ -96,7 +113,7 @@ void usb_serial_request_reply(void) {
 
                 // output epoch, temp, set-point, drive 
                 printf("%lu,%.2f,%.2f,%.2f\r\n",
-                       (unsigned long)snap.t_now,
+                       (unsigned long) snap.t_now,
                        snap.T_now, snap.T_target, snap.drive);
                 
             } else if (strcmp(line, "END") == 0) {
