@@ -1,10 +1,7 @@
-from abc import ABC, abstractmethod
-import numpy as np
-import smbus2
 import serial
 import time
 
-class Lidar(ABC):
+class Lidar():
     """
     Base class for LiDAR sensors.
 
@@ -46,37 +43,6 @@ class Lidar(ABC):
         if not response:
             return None
         return self._parse_line(response)
-    
-    @abstractmethod
-    def _parse_line(self, response):
-        """
-        Fill in subclasses.
-        """
-        pass
-
-    def update_orientation(self, roll=None, pitch=None, yaw=None):
-        """
-        Update the IMU orientation used for transforming LiDAR readings.
-
-        Parameters
-        ----------
-        roll : float or None
-            Roll angle in degrees (rotation around X-axis).
-        pitch : float or None
-            Pitch angle in degrees (rotation around Y-axis).
-        yaw : float or None
-            Yaw angle in degrees (rotation around Z-axis).
-        """
-        self.roll = roll
-        self.pitch = pitch
-        self.yaw = yaw
-
-class Lidar_TFLuna(Lidar):
-    """
-    LiDAR class for the TFLuna sensor using I2C.
-
-    Reads distance, signal strength, and temperature.
-    """
 
     def _parse_line(self, line):
         """
@@ -88,43 +54,15 @@ class Lidar_TFLuna(Lidar):
         Returns:
             dict or None: Parsed dictionary with distance, signal, and temperature.
         """
+        data = {}
         try:
             parts = line.strip().split(",")
             if len(parts) != 3:
                 return None
-            distance = int(parts[0])
-            strength = int(parts[1])
-            temperature = float(parts[2])
-            return distance, strength, temperature
-        except Exception as e:
-            print("[TFLuna] Parse error:", e)
-            return None, None, None
-        
-class Lidar_GRF250(Lidar):
-    """
-    LiDAR class for the GRF-250 sensor using I2C.
-
-    Reads distance, signal strength, and temperature.
-    """
-
-    def _parse_line(self, line):
-        """
-        Parse a comma-separated line from the Pico into structured LiDAR data.
-
-        Args:
-            line (str): String like '127,56,24.38' from the Pico
-
-        Returns:
-            dict or None: Parsed dictionary with distance, signal, and temperature.
-        """
-        try:
-            parts = line.strip().split(",")
-            if len(parts) != 3:
-                return None
-            distance = float(parts[0])
-            strength = int(parts[1])
-            temperature = float(parts[2])
-            return distance, strength, temperature
+            data["distance"] = float(parts[0])
+            data["strength"] = float(parts[1])
+            data["temperature"] = float(parts[2])
+            data["unix_time"] = time.time()
         except Exception as e:
             print("[GRF-250] Parse error:", e)
-            return None, None, None
+        return data
