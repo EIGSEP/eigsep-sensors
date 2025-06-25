@@ -26,7 +26,9 @@ def sample_values():
     """
     return {
         "q": np.array([0.707, 0.0, 0.707, 0.0]),  # quaternion (x, y, z, w)
+        "gq": np.array([0.700, 0.0, 0.700, 0.100]), # game quaternion (x, y, z, w)
         "euler": np.array(IMU_BNO085.quaternion_to_euler(np.array([0.707, 0.0, 0.707, 0.0]))), # euler
+        "geuler": np.array(IMU_BNO085.quaternion_to_euler(np.array([0.700, 0.0, 0.700, 0.100]))), # euler
         "a": np.array([0.0, 0.0, -9.81]),  # acceleration vector
         "la": np.array([0.0, 0.0, -9.81]),  # linear acceleration vector
         "g": np.array([0.0, 0.0, 0.0]),  # gyroscope vector
@@ -43,6 +45,7 @@ def pack_values(values):
     that resembles the output from the BNO085 IMU.
     """
     qx, qy, qz, qw = values["q"]
+    gqx, gqy, gqz, gqw = values["gq"]
     ax, ay, az = values["a"]
     la_x, la_y, la_z = values["la"]
     gx, gy, gz = values["g"]
