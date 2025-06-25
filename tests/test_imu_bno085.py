@@ -119,7 +119,7 @@ def test_parse_line(imu, sample_values):
 
     # add valid key with invalid value
     vals = pack_values(sample_values).split(",")
-    vals[1] = "a:not:floating:point"  # invalid acceleration
+    vals[2] = "a:not:floating:point"  # invalid acceleration
     invalid_str = ",".join(vals)
     read = imu._parse_line(invalid_str)
     # should have all keys except 'a' for acceleration
