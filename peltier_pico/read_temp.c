@@ -28,6 +28,7 @@ float read_pico_temperature() {
 
 
 float read_ds18b20_celsius(void) {
+    /*reads the temperature (˚C) from one sensor*/
     ow_reset(&ow);
     ow_send(&ow, OW_SKIP_ROM);          // broadcast (assumes one sensor)
     ow_send(&ow, DS18B20_CONVERT_T);    // 0x44
@@ -45,35 +46,23 @@ float read_ds18b20_celsius(void) {
     return temp_celsius;
 }
 
-// float read_ds18b20_celsius(void) {
-//     printf("[DS18B20] Starting temperature read...\n");
-
-//     if (!ow_reset(&ow)) {
-//         printf("[DS18B20] ERROR: Sensor not responding (reset failed)\n");
-//         return -1000.0f; // Error value
-//     }
-//     ow_send(&ow, OW_SKIP_ROM);
-//     ow_send(&ow, DS18B20_CONVERT_T);
-
-//     sleep_ms(750);
-
-//     if (!ow_reset(&ow)) {
-//         printf("[DS18B20] ERROR: Sensor not responding after conversion (reset failed)\n");
-//         return -1000.0f;
-//     }
-//     ow_send(&ow, OW_SKIP_ROM);
-//     ow_send(&ow, DS18B20_READ_SCRATCHPAD);
-
-//     uint8_t scratch[9];
-//     for (int i = 0; i < 9; ++i) {
-//         scratch[i] = ow_read(&ow);
-//         printf("[DS18B20] Scratch[%d] = 0x%02X\n", i, scratch[i]);
-//     }
-
-//     // Optional: check CRC if available
-
-//     int16_t raw = (scratch[1] << 8) | scratch[0];
-//     float temp_celsius = (float)raw / 16.0f;
-//     printf("[DS18B20] Returning %.2f C (raw=0x%04X)\n", temp_celsius, raw);
-//     return temp_celsius;
-// }
+float read_ds18b20_by_rom(uint64_t rom) {
+    /*reads the temperature (˚C) from a ds18b20 with a given ROM address*/
+    ow_reset(&ow);
+    ow_send(&ow, OW_MATCH_ROM);
+    
+    // send the rOM code by LSB first
+    for (int i = 0; i < 8; ++i) {
+        uint8_t byte = (uint8_t)(rom >> (8 * i));
+        ow_send(&ow, byte);
+    }
+    
+    ow_send(&ow, DS18B20_READ_SCRATCHPAD);
+    uint8_t scratch[9];
+    for (int i = 0; i < 9; ++i) {
+        scratch[i] = ow_read(&ow);
+    }
+    // concerts scratchpad nytes to temps (LSB byte is scratch[0], MSB is scratch[1])
+    int16_t raw = (scratch[1] << 8) | scratch[0];
+    return (float)raw / 16.0f;
+}

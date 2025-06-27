@@ -7,33 +7,91 @@
 #include "ds18b20.h"
 
 
-// Global temperature and therm variables
+// Global temperature and data variables
 volatile HBridge hb;
-#define DS_PIN 22          
-OW ow;                     // 1-wire bus obj
+volatile HBridge hb2;                          // peltier-2 
+#define DS_PIN 22                              // DQ (data) pin for ds18b20 thermistor-1 (potentially thermistor-2 as well)
+static uint64_t sensor1_rom, sensor2_rom;
+OW ow;                                         // 1-wire bus obj
 
-bool control_temperature_callback(struct repeating_timer *t) {
-    if (!hb.enabled) {
+// bool control_temperature_callback(struct repeating_timer *t) {
+//     /*callback for single thermistor*/
+//     if (!hb.enabled) {
+//         return true;
+//     }
+//     // hbridge_update_T(&hb, time(NULL), read_peltier_thermistor()); // old thermistor
+//     // hbridge_update_T(&hb, time(NULL), read_ds18b20_celsius());    
+//     hbridge_update_T(&hb, time(NULL), read_ds18b20_by_rom();           
+//     hbridge_hysteresis_drive(&hb);
+//     return true; 
+// }
+
+bool control_temperature_callback(struct repeating_tiemr *t) {
+    if (!hb.enabled && !hb2.enabled) {
         return true;
     }
     
-    // hbridge_update_T(&hb, time(NULL), read_peltier_thermistor());
-    hbridge_update_T(&hb, time(NULL), read_ds18b20_celsius());            
+    // reads temp from each ds18b20 (conversion completed from prev cycle)
+    float T1 = read_ds18b20_by_rom(sensor1_rom);
+    float T2 = read_ds18b20_by_rom(sensor2_rom);
+    
+    time_t now = time(NULL);
+    hbridge_update_T(&hb, now, T1);
+    hbridge_update_T(&hb2, now, T2);
+    
     hbridge_hysteresis_drive(&hb);
-    return true; 
+    hbridge_hysteresis_drive(&hb2);
+    
+    // starts new temp conversion on both sensors for next cycle
+    ow_reset(&ow);
+    ow_send(&ow, OW_SKIP_ROM);
+    ow_send(&ow, DS18B20_CONVERT_T);
+    return true;
+    
 }
 
+// 1-wire rom search test + init temp conversions (for dual independent control loops)
 void control_temperature() {
     uint offset = pio_add_program(pio0, &onewire_program);
-    ow_init(&ow, pio0, offset, DS_PIN);
+    ow_init(&ow, pio0, offset, DS_PIN);         // initializing 1-wire bus
+    
+    // searching for thermistor ROM codes |  CAN REPLACE WITH HARD CODED ADDRESSES, example: uint64_t sensor1_rom=bitcodeULL;
+    uint64_t rom_codes[2];
+    int count = ow_romsearch(&ow, rom_codes, 2, OW_SEARCH_ROM);
+    if (count >=2) {
+        uint64_t = sensor1_rom = rom_codes[0];
+        uint64_t = sensor2_rom = rom_codes[1];
+    } else {
+        printf("Err: only %d DS18B20 sensor(s) found on the bus.\n", count);
+    }
+    // end search for ROm codes
+    
+    // starting an initial temp conversion on all sensors
+    ow_reset(&ow);
+    ow_send(&ow, OW_SKIP_ROM);
+    ow_send(&ow, DS18B20_CONVERT_T);
+    
+    // setting up a repeating timer to periodically read temps and control peltiers
     struct repeating_timer timer;
     add_repeating_timer_ms(-750, control_temperature_callback, NULL, &timer);
     while (true) {
         tight_loop_contents();
     }
+    
 }
 
-// // Thread to read temperatures and run peltier continuously ------- test
+// void control_temperature() {
+//     /*for single ds18b20 thermistor*/
+//     uint offset = pio_add_program(pio0, &onewire_program);
+//     ow_init(&ow, pio0, offset, DS_PIN);
+//     struct repeating_timer timer;
+//     add_repeating_timer_ms(-750, control_temperature_callback, NULL, &timer);
+//     while (true) {
+//         tight_loop_contents();
+//     }
+// }
+
+// // Thread to read temperatures and run peltier continuously ------- old thermistor + Pico ADC
 // void control_temperature() {
 //     adc_init();
 //     adc_gpio_init(26);                 // enabling adc 0 on pin 26
@@ -80,7 +138,7 @@ void control_temperature() {
 //     }
 // }
 
-// /// USB serial comms data logger
+/// USB serial comms data logger
 void usb_serial_request_reply(void) {
     stdio_init_all();
     printf("USB serial online.\n");
@@ -136,15 +194,33 @@ void usb_serial_request_reply(void) {
     }
 }
 
-// Main function
 int main() {
-    float T_target=30.0; // C
-    float t_target=10.0; // s
-    float gain=0.2;      // max allowed drive | was 0.7
-
-    hbridge_init(&hb, T_target, t_target, gain);
-    multicore_launch_core1(control_temperature); // Launch temperature thread on core 1
-    // usb_serial();                             // USB comms on core 0
-    usb_serial_request_reply();                  // Handle USB communication on core 0
+    // === Peltier-1 params ===
+    float T_target=30.0;    // ˚C, front-end target
+    float t_target=10.0;    // s
+    float gain=0.2;         // max allowed drive | was 0.7
+    
+    // === Peltier-2 params ===
+    float T_target2=32.0; // ˚C, noise source target
+    
+    // usb_serial_request_reply();                 // try this first to see if we get the "Send REQ" message upon opening serial
+    
+    // === init peltier-1 control ===
+    hbridge_init(&hb,  T_target, t_target, gain);
+    hb.channel =1;                                 // designate as channel 1
+    
+    // === init peltier-2 control ===
+    hb2 = hb;                                      // copies all configs and states then changes them as not to call hbridge_init() twice
+    hb2.T_target = T_target2;
+    hb2.T_now  = hb2.T_target;
+    hb2.T_prev = hb2.T_target;
+    hb2.channel = 2;
+    hb2.enabled= true; 
+    hb2.active = true;
+    // hbridge_init(&hb2, T_target2, t_target, gain); // Peltier-2 -- test
+    
+    multicore_launch_core1(control_temperature);   // Launch temperature thread on core 1
+    // usb_serial();                               // USB comms on core 0
+    usb_serial_request_reply();                    // Handle USB communication on core 0
     return 0;
 }

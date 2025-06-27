@@ -4,12 +4,12 @@
 // Call once at startup to configure PWM + direction pins
 void hbridge_init(HBridge *hb, float T_target, float t_target, float gain) {
     
-    // ---------- Peltier 1 ----------------
+    // === Peltier 1 ===
     // PWM setup
     gpio_set_function(HBRIDGE_PWM_PIN, GPIO_FUNC_PWM);
     hb->hbridge_pwm_slice = pwm_gpio_to_slice_num(HBRIDGE_PWM_PIN);
     pwm_config cfg = pwm_get_default_config();     // do this once given currently we will drive peltier 1 & 2 to the same setpoint
-    pwm_config_set_wrap(&cfg, PWM_WRAP);           // do this once
+    pwm_config_set_wrap(&cfg, PWM_WRAP);           // do this once (may change if setpoints are independent)
     pwm_init(hb->hbridge_pwm_slice, &cfg, true);
     
     // Direction pins for motor 1 (Peltier 1)
@@ -18,9 +18,9 @@ void hbridge_init(HBridge *hb, float T_target, float t_target, float gain) {
     gpio_init(HBRIDGE_DIR_PIN2);
     gpio_set_dir(HBRIDGE_DIR_PIN2, GPIO_OUT);
 
-    // ---------- Peltier 2 -----------------
+    // === Peltier 2 ===
     gpio_set_function(HBRIDGE_PWM_PIN2, GPIO_FUNC_PWM);
-    hb->hbridge_pwm_slice2 = pwm_gpio_to_slice_num(HBRIDGE_PWM_PIN2);
+    hb2->hbridge_pwm_slice2 = pwm_gpio_to_slice_num(HBRIDGE_PWM_PIN2); // hb2 
     pwm_init(hb->hbridge_pwm_slice2, &cfg, true);
     
     // Direction pins for motor 2 (Peltier 2)
@@ -29,7 +29,7 @@ void hbridge_init(HBridge *hb, float T_target, float t_target, float gain) {
     gpio_init(HBRIDGE_DIR_PIN4);
     gpio_set_dir(HBRIDGE_DIR_PIN4, GPIO_OUT);
     
-    // Time and temp targets
+    // === Time and temp targets Peltier-1 ===
     hb->T_prev = hb->T_now = hb->T_target = T_target;
     hb->t_target = t_target;
     hb->t_prev = hb->t_now = time(NULL);
@@ -38,6 +38,9 @@ void hbridge_init(HBridge *hb, float T_target, float t_target, float gain) {
     hb->hysteresis = 1.0f; // ∆T, fine-tune
     hb->active = true;     // starts as engaged, setpoint achieved once     ----- "off" if we do not want TEC to run on bootup
     hb->enabled = true;    // initially disabled                            ----- "off" if we do not want TEC to run on bootup
+    
+    // === Time and temp targets Peltier-2 ===
+    
     
     // // === PID gain coefficients ===
     // hb->kp = 1.0f;
@@ -173,6 +176,7 @@ void hbridge_raw_drive(bool forward, uint32_t level) {
         gpio_put(HBRIDGE_DIR_PIN2, false);
         gpio_put(HBRIDGE_DIR_PIN3, false);     // pin 3 and 4 for peltier-2
         gpio_put(HBRIDGE_DIR_PIN4, false);
+        
     } else {
         level = 0.4 * PWM_WRAP + 0.1 * level;
         // printf("Drive: %b, %d\n", forward, level); // uncomment as needed when debugging.

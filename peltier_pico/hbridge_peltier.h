@@ -37,6 +37,8 @@ typedef struct {
     bool active;      // when true, PID is engaged
     bool enabled;     // if we want to enable/disable H-bridge at runtime -- used in runtime_cmd.c line 28/34
     
+    int channel;      // identifier for the peltier channel (1 or 2)
+    
     // // === PID state ===
     // float pid_integral;
     // float pid_prev_error;
