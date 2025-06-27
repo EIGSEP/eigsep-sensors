@@ -278,7 +278,7 @@ class IMU_BNO085(IMU):
         Returns:
             tuple: (roll, pitch, yaw) in degrees
         """
-        w, x, y, z = q
+        x, y, z, w = q
 
         # Roll (x-axis rotation)
         sinr_cosp = 2 * (w * x + y * z)

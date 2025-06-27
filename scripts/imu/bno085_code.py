@@ -98,10 +98,6 @@ def read_and_format_imu_data():
             Absolute orientation expressed as a unit quaternion.
             Provides accurate rotation without gimbal lock. Used for 3D tracking, AR/VR, and heading.
 
-    gq    : Game rotation vector quaternion [gqx:gqy:gqz:gqw]  -> List[float] (length 4)
-            Relative orientation (no magnetometer). Stable, drift-limited rotation tracking.
-            Ideal for fast, smooth motion in AR/VR or gaming. Not referenced to magnetic north.
-
     a     : Acceleration [ax:ay:az]                       -> List[float] (length 3)
             Raw accelerometer output in m/s^2 including both gravity and linear motion.
 
