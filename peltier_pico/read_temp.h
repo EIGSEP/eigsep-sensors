@@ -41,3 +41,4 @@ static const float adc_v_per_cnt = ADC_V / (1 << ADC_BITS); // (old thermistor s
 float read_pico_temperature();
 float read_peltier_thermistor(void);
 float read_ds18b20_celsius(void);
+float read_ds18b20_by_rom(uint64_t rom);

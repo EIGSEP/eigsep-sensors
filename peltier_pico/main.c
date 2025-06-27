@@ -10,7 +10,7 @@
 // Global temperature and data variables
 volatile HBridge hb;
 volatile HBridge hb2;                          // peltier-2 
-#define DS_PIN 22                              // DQ (data) pin for ds18b20 thermistor-1 (potentially thermistor-2 as well)
+#define DS_PIN 22                              
 static uint64_t sensor1_rom, sensor2_rom;
 OW ow;                                         // 1-wire bus obj
 

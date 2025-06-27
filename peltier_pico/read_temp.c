@@ -1,4 +1,3 @@
-#pragma once
 #include "read_temp.h"
 
 // === ds18b20 === 

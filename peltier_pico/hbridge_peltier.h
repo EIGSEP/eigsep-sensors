@@ -51,7 +51,7 @@ void hbridge_update_T(HBridge *hb, time_t t_now, float T_now);
 void hbridge_hysteresis_drive(HBridge *hb);     
 void hbridge_smart_drive(HBridge *hb);
 void hbridge_drive(HBridge *hb);
-void hbridge_raw_drive(bool forward, uint32_t level);
-// float hbridge_pid_compute(HBridge *hb, float setpoint, float measured, float dt); // testing PID control
+void hbridge_raw_drive(HBridge *hb, bool forward, uint32_t level);                        // added HBridge *hb argument
+// float hbridge_pid_compute(HBridge *hb, float setpoint, float measured, float dt);      // testing PID control
 
 

@@ -18,10 +18,11 @@ void hbridge_init(HBridge *hb, float T_target, float t_target, float gain) {
     gpio_init(HBRIDGE_DIR_PIN2);
     gpio_set_dir(HBRIDGE_DIR_PIN2, GPIO_OUT);
 
-    // === Peltier 2 ===
-    gpio_set_function(HBRIDGE_PWM_PIN2, GPIO_FUNC_PWM);
-    hb2->hbridge_pwm_slice2 = pwm_gpio_to_slice_num(HBRIDGE_PWM_PIN2); // hb2 
-    pwm_init(hb->hbridge_pwm_slice2, &cfg, true);
+    // // === Peltier 2 ===
+    // gpio_set_function(HBRIDGE_PWM_PIN2, GPIO_FUNC_PWM);
+    // hb2->hbridge_pwm_slice2 = pwm_gpio_to_slice_num(HBRIDGE_PWM_PIN2); // hb2 
+    // hb->hbridge_pwm_slice
+    // pwm_init(hb->hbridge_pwm_slice2, &cfg, true);
     
     // Direction pins for motor 2 (Peltier 2)
     gpio_init(HBRIDGE_DIR_PIN3);
@@ -210,7 +211,7 @@ void hbridge_smart_drive(HBridge *hb) {
 //     hbridge_raw_drive(forward, level);
 // }
 
-void hbridge_drive(Hbridge *hb) {
+void hbridge_drive(HBridge *hb) {
     /*
       hbridge_drive for independent control loops.
     • Drives the H-bridge for a given peltier based on hb->drive in hbridge_smart_drive().
@@ -237,20 +238,20 @@ void hbridge_drive(Hbridge *hb) {
     // return;  // uncomment if we replace raw_drive() entirely with hbridge_drive() and remove the above else{} statement
 }
 
-void hbridge_raw_drive(Hbridge *hb, bool forward, uint32_t level) {
+void hbridge_raw_drive(HBridge *hb, bool forward, uint32_t level) {
         /*
           Applies a baseline PWM offset to avoid very low drive levels.
           The offset introduces a 40% minimum PWM duty when the TECs are active,
         */
         uint32_t adjusted_level = (uint32_t)(0.4 * PWM_WRAP + 0.1 * level);
-        if (adjusted_level > PWM_WRAP {
+        if (adjusted_level > PWM_WRAP) {
             adjusted_level = PWM_WRAP;
         }
         if (hb->channel == 1) {
             gpio_put(HBRIDGE_DIR_PIN1, forward);
             gpio_put(HBRIDGE_DIR_PIN2, !forward);
             pwm_set_gpio_level(HBRIDGE_PWM_PIN, adjusted_level);
-        } else if (hb->channel == 2 {
+        } else if (hb->channel == 2) {
             gpio_put(HBRIDGE_DIR_PIN3, forward);
             gpio_put(HBRIDGE_DIR_PIN4, !forward);
             pwm_set_gpio_level(HBRIDGE_PWM_PIN2, adjusted_level);
