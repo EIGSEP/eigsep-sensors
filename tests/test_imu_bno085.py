@@ -26,7 +26,6 @@ def sample_values():
     """
     return {
         "q": np.array([0.707, 0.0, 0.707, 0.0]),  # quaternion (x, y, z, w)
-        "gq": np.array([0.700, 0.0, 0.700, 0.100]), # game quaternion (x, y, z, w)
         "euler": np.array(IMU_BNO085.quaternion_to_euler(np.array([0.707, 0.0, 0.707, 0.0]))), # euler
         "geuler": np.array(IMU_BNO085.quaternion_to_euler(np.array([0.700, 0.0, 0.700, 0.100]))), # euler
         "a": np.array([0.0, 0.0, -9.81]),  # acceleration vector
@@ -45,7 +44,6 @@ def pack_values(values):
     that resembles the output from the BNO085 IMU.
     """
     qx, qy, qz, qw = values["q"]
-    gqx, gqy, gqz, gqw = values["gq"]
     ax, ay, az = values["a"]
     la_x, la_y, la_z = values["la"]
     gx, gy, gz = values["g"]
@@ -57,7 +55,6 @@ def pack_values(values):
     return ",".join(
         [
             f"q:{qx:.3f}:{qy:.3f}:{qz:.3f}:{qw:.3f}",
-            f"gq:{gqx:.3f}:{gqy:.3f}:{gqz:.3f}:{gqw:.3f}",
             f"a:{ax:.3f}:{ay:.3f}:{az:.3f}",
             f"la:{la_x:.3f}:{la_y:.3f}:{la_z:.3f}",
             f"g:{gx:.3f}:{gy:.3f}:{gz:.3f}",
@@ -119,7 +116,7 @@ def test_parse_line(imu, sample_values):
 
     # add valid key with invalid value
     vals = pack_values(sample_values).split(",")
-    vals[2] = "a:not:floating:point"  # invalid acceleration
+    vals[1] = "a:not:floating:point"  # invalid acceleration
     invalid_str = ",".join(vals)
     read = imu._parse_line(invalid_str)
     # should have all keys except 'a' for acceleration
