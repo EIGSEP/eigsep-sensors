@@ -66,7 +66,7 @@ def test_get_orientation_unit_vector():
 
 def test_quaternion_to_euler():
     # Identity quaternion (no rotation)
-    q = [0.0, 0.0, 0.0, 1.0]
+    q = [1.0, 0.0, 0.0, 0.0]
     roll, pitch, yaw = IMU_BNO085.quaternion_to_euler(q)
     assert np.isclose(roll, 0.0, atol=1e-5)
     assert np.isclose(pitch, 0.0, atol=1e-5)
