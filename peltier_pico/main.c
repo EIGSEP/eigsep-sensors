@@ -26,7 +26,7 @@ OW ow;                                         // 1-wire bus obj
 //     return true; 
 // }
 
-bool control_temperature_callback(struct repeating_tiemr *t) {
+bool control_temperature_callback(struct repeating_timer *t) {
     if (!hb.enabled && !hb2.enabled) {
         return true;
     }
@@ -59,8 +59,8 @@ void control_temperature() {
     uint64_t rom_codes[2];
     int count = ow_romsearch(&ow, rom_codes, 2, OW_SEARCH_ROM);
     if (count >=2) {
-        uint64_t = sensor1_rom = rom_codes[0];
-        uint64_t = sensor2_rom = rom_codes[1];
+        uint64_t sensor1_rom = rom_codes[0];
+        uint64_t sensor2_rom = rom_codes[1];
     } else {
         printf("Err: only %d DS18B20 sensor(s) found on the bus.\n", count);
     }
@@ -73,7 +73,7 @@ void control_temperature() {
     
     // setting up a repeating timer to periodically read temps and control peltiers
     struct repeating_timer timer;
-    add_repeating_timer_ms(-750, control_temperature_callback, NULL, &timer);
+    add_repeating_timer_ms(-800, control_temperature_callback, NULL, &timer);
     while (true) {
         tight_loop_contents();
     }
@@ -164,15 +164,23 @@ void usb_serial_request_reply(void) {
 
             if (strcmp(line, "REQ") == 0) {
                 // snapshot of hb written by core-1  
-                HBridge snap;
+                HBridge snap1, snap2;
                 uint32_t ints = save_and_disable_interrupts();
-                snap = hb;
+                snap1 = hb;
+                snap2 = hb2;
                 restore_interrupts(ints);
-
-                // output epoch, temp, set-point, drive 
-                printf("%lu,%.2f,%.2f,%.2f\r\n",
-                       (unsigned long) snap.t_now,
-                       snap.T_now, snap.T_target, snap.drive);
+                
+                /*
+                Format for output:
+                ------------------ 
+                epoch_time, 
+                Peltier1_temp, Peltier1_target, Peltier1_drive, 
+                Peltier2_temp, Peltier2_target, Peltier2_drive
+                */
+                printf("%lu,\n%.2f,%.2f,%.2f,\n%.2f,%.2f,%.2f\r\n",
+                       (unsigned long) snap1.t_now,
+                       snap1.T_now, snap1.T_target, snap1.drive,
+                       snap2.T_now, snap2.T_target, snap2.drive);
                 
             } else if (strcmp(line, "END") == 0) {
                 printf("Stopped recording.\r\n");
@@ -180,17 +188,18 @@ void usb_serial_request_reply(void) {
                 
             } else if (line[0] != '\0') {
                 // enables run-time commands
-		host_cmd_execute(line, &hb); 
+		         host_cmd_execute(line, &hb);
+                host_cmd_execute(line, &hb2); 
             }
             
         } else {
-	    if (idx < (int)sizeof(line) - 1) { 
+            if (idx < (int)sizeof(line) - 1) { 
                 line[idx++] = (char)ch;              
             } else {
-		// printf("ERR: command too long.\r\n");
-		idx = 0; // reset index if line is too long
-	    }
-	}
+                // printf("ERR: command too long.\r\n");
+                idx = 0; // reset index if line is too long
+            }
+        }
     }
 }
 
