@@ -62,7 +62,7 @@ float read_ds18b20_by_rom(uint64_t rom) {
     for (int i = 0; i < 9; ++i) {
         scratch[i] = ow_read(&ow);
     }
-    // concerts scratchpad nytes to temps (LSB byte is scratch[0], MSB is scratch[1])
+    // converts scratchpad bytes to temps (LSB byte is scratch[0], MSB is scratch[1])
     int16_t raw = (scratch[1] << 8) | scratch[0];
     return (float)raw / 16.0f;
 }
