@@ -51,7 +51,7 @@ float read_ds18b20_by_rom(uint64_t rom) {
     ow_reset(&ow);
     ow_send(&ow, OW_MATCH_ROM);
     
-    // send the rOM code by LSB first
+    // send the ROM code by LSB first
     for (int i = 0; i < 8; ++i) {
         uint8_t byte = (uint8_t)(rom >> (8 * i));
         ow_send(&ow, byte);
