@@ -66,7 +66,7 @@ bool ow_reset (OW *ow) {
 
 // Find ROM codes (64-bit hardware addresses) of all connected devices.
 // See https://www.analog.com/en/app-notes/1wire-search-algorithm.html
-// Returns: the number of devices found (up to maxdevs) or -1 if an error occurrred.
+// Returns: the number of devices found (up to maxdevs) or -1 if an error occurred.
 // ow: pointer to an OW driver struct
 // romcodes: location at which store the addresses (NULL means don't store)
 // maxdevs: maximum number of devices to find (0 means no limit)
