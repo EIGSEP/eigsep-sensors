@@ -53,14 +53,14 @@ bool control_temperature_callback(struct repeating_timer *t) {
 // 1-wire rom search test + init temp conversions (for dual independent control loops)
 void control_temperature() {
     uint offset = pio_add_program(pio0, &onewire_program);
-    ow_init(&ow, pio0, offset, DS_PIN);         // initializing 1-wire bus
+    ow_init(&ow, pio0, offset, DS_PIN);                                                           
     
     // searching for thermistor ROM codes |  CAN REPLACE WITH HARD CODED ADDRESSES, example: uint64_t sensor1_rom=bitcodeULL;
     uint64_t rom_codes[2];
     int count = ow_romsearch(&ow, rom_codes, 2, OW_SEARCH_ROM);
     if (count >=2) {
-        uint64_t sensor1_rom = rom_codes[0];
-        uint64_t sensor2_rom = rom_codes[1];
+        sensor1_rom = rom_codes[0];                                                   // removed uint64_t from line 62/63 given we define these globally
+        sensor2_rom = rom_codes[1];
     } else {
         printf("Err: only %d DS18B20 sensor(s) found on the bus.\n", count);
     }
@@ -73,7 +73,7 @@ void control_temperature() {
     
     // setting up a repeating timer to periodically read temps and control peltiers
     struct repeating_timer timer;
-    add_repeating_timer_ms(-800, control_temperature_callback, NULL, &timer);
+    add_repeating_timer_ms(-750, control_temperature_callback, NULL, &timer);
     while (true) {
         tight_loop_contents();
     }
