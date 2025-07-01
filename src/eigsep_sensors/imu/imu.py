@@ -63,7 +63,7 @@ class IMU(ABC):
         Closes serial connection.
         """
         self.ser.close()
-    
+
     @staticmethod
     def get_pitch_roll_from_gravity(gx, gy, gz):
         pitch = np.degrees(np.arcsin(-gx / np.linalg.norm([gx, gy, gz])))
@@ -234,7 +234,7 @@ class IMU_BNO085(IMU):
             except Exception as e:
                 print(f"[IMU_BNO085] Parse error for {part}: {e}")
         if "q" in data:
-            data["euler"] = self.quaternion_to_euler(data["q"])    
+            data["euler"] = self.quaternion_to_euler(data["q"])
         data["unix_time"] = time.time()
 
         return data
@@ -252,7 +252,7 @@ class IMU_BNO085(IMU):
             self.ser.write(b"CAL\n")
         else:
             super()._request_imu()
-    
+
     def read_imu(self, cal=False):
         """
         Request and read data from the IMU via serial.

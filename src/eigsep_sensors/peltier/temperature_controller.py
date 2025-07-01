@@ -10,7 +10,7 @@ class TemperatureController:
 
     def __init__(self, port, baudrate=115200, timeout=1):
         """
-        Initialize and open the serial port. Waits briefly for the Pico to reset.
+        Initialize and open the serial port. Waits briefly for Pico reset.
 
         Args:
             port (str): Serial port (e.g., '/dev/ttyACM0' or 'COM3').
@@ -42,18 +42,42 @@ class TemperatureController:
         Request a single temperature reading.
 
         Returns:
-            tuple: (timestamp (int), T_now (float), T_target (float), drive (float))
+            tuple: (timestamp (int), T1_now (float), T1_target (float),
+                   T1_drive (float), T2_now (float), T2_target (float),
+                   T2_drive (float))
 
         Raises:
             ValueError: if the response cannot be parsed.
         """
         self.ser.write(b"REQ\r\n")
-        line = self.ser.readline().decode().strip()
-        parts = line.split(",")
-        if len(parts) != 4:
-            raise ValueError(f"Unexpected response: {line}")
-        timestamp, T_now, T_target, drive = parts
-        return int(timestamp), float(T_now), float(T_target), float(drive)
+        # Read multi-line response: timestamp, peltier1 data, peltier2 data
+        line1 = self.ser.readline().decode().strip()  # timestamp,
+        line2 = self.ser.readline().decode().strip()  # T1,target1,drive1,
+        line3 = self.ser.readline().decode().strip()  # T2,target2,drive2
+
+        # Parse each line
+        timestamp_str = line1.rstrip(",")
+        peltier1_parts = line2.rstrip(",").split(",")
+        peltier2_parts = line3.split(",")
+
+        if len(peltier1_parts) != 3 or len(peltier2_parts) != 3:
+            raise ValueError(
+                f"Unexpected response format: {line1}|{line2}|{line3}"
+            )
+
+        timestamp = int(timestamp_str)
+        T1_now, T1_target, T1_drive = map(float, peltier1_parts)
+        T2_now, T2_target, T2_drive = map(float, peltier2_parts)
+
+        return (
+            timestamp,
+            T1_now,
+            T1_target,
+            T1_drive,
+            T2_now,
+            T2_target,
+            T2_drive,
+        )
 
     def start_monitoring(self, interval, callback=None):
         """
@@ -62,7 +86,7 @@ class TemperatureController:
         Args:
             interval (float): Seconds between readings.
             callback (callable, optional): Function to call with each reading.
-                                           If None, readings are printed.
+                If None, readings are printed.
         """
         if self._monitor_thread and self._monitor_thread.is_alive():
             raise RuntimeError("Monitoring already running")
