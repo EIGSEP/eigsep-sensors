@@ -92,7 +92,7 @@ void calibrate_imu(BNO08x& imu) {
     int accel_status = -1;
     int mag_status = -1;
 
-    absolute_time_t deadline = make_timeout_time_ms(500);
+    absolute_time_t deadline = make_timeout_time_ms(50);
 
     while (!time_reached(deadline)) {
         if (!imu.getSensorEvent()) continue;
@@ -112,7 +112,7 @@ void calibrate_imu(BNO08x& imu) {
         if (accel_status == 3 && mag_status == 3) break;
     }
 
-    if (accel_status >= 2 && mag_status >= 2) {
+    if (accel_status >= 3 && mag_status >= 3) {
         printf("%d,%d\n", accel_status, mag_status);
         imu.saveCalibration();
     } else {
