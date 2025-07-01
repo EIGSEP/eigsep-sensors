@@ -4,6 +4,33 @@
 
 Code for sensors used: accelerometer, lidar, thermistors, peltiers.
 
+## Quick Start
+
+**For Python Development:**
+```bash
+git clone https://github.com/EIGSEP/eigsep-sensors.git
+cd eigsep-sensors
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+python -m pytest tests/  # Run tests
+```
+
+**For Pico C Firmware:**
+```bash
+cd peltier_pico/
+export PICO_SDK_PATH=/path/to/pico-sdk
+chmod +x build_it.sh && ./build_it.sh
+# Flash generated build/pico_T_ctrl.uf2 to Pico
+```
+
+**For Temperature Control:**
+```python
+from eigsep_sensors.peltier.temperature_controller import TemperatureController
+controller = TemperatureController('/dev/ttyACM0')
+data = controller.read_temperature()  # Returns 7 values: timestamp + 2 peltier readings
+```
+
 **Installation:**
 
 Clone the repository and run `pip install .` in the root of the directory. This automatically installs all required dependencies. For developing, do `pip install .[dev]` instead to get additional dependencies related to testing of code.
@@ -67,4 +94,187 @@ NOTE: any changes to the .c or header (.h) scripts will requires recompilation i
 cd build/
 make
 ```
+
+**Flash firmware to Pico:**
+1. Hold the BOOTSEL button on the Pico while connecting it to USB
+2. The Pico will appear as a USB drive (RPI-RP2)
+3. Copy the generated `pico_T_ctrl.uf2` file to the Pico drive
+4. The Pico will automatically reboot and start running the firmware
+
+## Python Interface Usage
+
+### Development Setup
+
+Create and activate a virtual environment, then install dependencies:
+
+```bash
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install package with development dependencies
+pip install -e ".[dev]"
+```
+
+### Running Tests
+
+```bash
+# Activate virtual environment
+source .venv/bin/activate
+
+# Run all tests
+python -m pytest tests/
+
+# Run specific test file
+python -m pytest tests/test_temperature_controller.py -v
+
+# Run tests with coverage
+python -m pytest tests/ --cov=src --cov-report=html
+```
+
+### Code Formatting and Linting
+
+```bash
+# Format code
+python -m black src/
+
+# Check linting
+python -m flake8 src/
+
+# Check formatting without making changes
+python -m black --check src/
+```
+
+## Temperature Controller Usage
+
+### Dual Peltier Control System
+The firmware now supports independent control of two Peltier elements with separate DS18B20 temperature sensors.
+
+**Hardware Requirements:**
+- Raspberry Pi Pico 2
+- 2x DS18B20 temperature sensors (1-Wire)
+- H-bridge driver (e.g., XY-160D) 
+- 2x Peltier elements
+- Pull-up resistor (4.7kΩ) on 1-Wire data line
+
+**Wiring:**
+- DS18B20 data line: GPIO 22 (with 4.7kΩ pull-up to 3.3V)
+- Peltier 1 PWM: GPIO 16
+- Peltier 1 Direction: GPIO 18, 19
+- Peltier 2 PWM: GPIO 15  
+- Peltier 2 Direction: GPIO 13, 12
+
+### Python Temperature Controller
+
+```python
+from eigsep_sensors.peltier.temperature_controller import TemperatureController
+
+# Connect to Pico
+controller = TemperatureController('/dev/ttyACM0', baudrate=115200)
+
+# Read single temperature measurement (returns 7 values)
+timestamp, t1_now, t1_target, t1_drive, t2_now, t2_target, t2_drive = controller.read_temperature()
+
+print(f"Peltier 1: {t1_now:.1f}°C -> {t1_target:.1f}°C (drive: {t1_drive:.2f})")
+print(f"Peltier 2: {t2_now:.1f}°C -> {t2_target:.1f}°C (drive: {t2_drive:.2f})")
+
+# Start/stop control loops
+controller.start_control_loop()
+controller.stop_control_loop()
+
+# Continuous monitoring with callback
+def data_callback(reading):
+    timestamp, t1_now, t1_target, t1_drive, t2_now, t2_target, t2_drive = reading
+    print(f"Time: {timestamp}, P1: {t1_now:.1f}°C, P2: {t2_now:.1f}°C")
+
+controller.start_monitoring(interval=1.0, callback=data_callback)
+# ... let it run ...
+controller.stop_monitoring()
+
+# Clean up
+controller.close()
+```
+
+### Serial Protocol
+
+The firmware communicates via USB serial at 115200 baud. Commands:
+
+- `REQ` - Request temperature reading (returns 3 lines)
+- `RESUME` - Start temperature control loops  
+- `STOP` - Stop temperature control loops
+- `END` - Stop data logging
+
+**Response format for `REQ`:**
+```
+12345,
+25.5,30.0,0.75,
+32.0,35.0,0.5
+```
+Where:
+- Line 1: Unix timestamp
+- Line 2: Peltier 1 (current temp, target temp, drive level)
+- Line 3: Peltier 2 (current temp, target temp, drive level)
+
+### Configuration
+
+Edit `main.c` to change default settings:
+
+```c
+// Peltier-1 parameters  
+float T_target=30.0;    // °C, front-end target
+float t_target=10.0;    // s
+float gain=0.2;         // max allowed drive
+
+// Peltier-2 parameters
+float T_target2=32.0;   // °C, noise source target
+```
+
+### Data Logging Scripts
+
+Use the provided Python scripts for data collection:
+
+```bash
+# Log temperature data to CSV
+python scripts/peltier/host_logger.py
+
+# Interactive Pico control
+python scripts/peltier/picoctl.py
+
+# Simple serial interface
+python scripts/peltier/picoser.py
+```
+
+## Other Sensor Modules
+
+### IMU (BNO08x/MMA8451)
+```python
+from eigsep_sensors.imu import IMU
+
+# Initialize IMU
+imu = IMU()
+accel_data = imu.get_acceleration()
+```
+
+### Thermistor
+```python
+from eigsep_sensors.thermistor import Thermistor
+
+thermistor = Thermistor()
+temperature = thermistor.read_temperature()
+```
+
+## Troubleshooting
+
+**Common Issues:**
+
+1. **Build fails:** Ensure PICO_SDK_PATH is set correctly
+2. **Serial connection fails:** Check device permissions (`sudo usermod -a -G dialout $USER`)
+3. **Tests fail:** Ensure virtual environment is activated and dependencies installed
+4. **Firmware doesn't respond:** Check baud rate (115200) and try pressing reset button
+
+**Development Tips:**
+
+- Use `mpremote` for Pico filesystem operations
+- Monitor serial output: `screen /dev/ttyACM0 115200` or `picocom -b 115200 /dev/ttyACM0`
+- Check Pico status LED for error indications
 
