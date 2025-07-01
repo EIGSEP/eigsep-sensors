@@ -2,6 +2,7 @@ import pytest
 import threading
 import time
 from unittest.mock import Mock, patch, MagicMock
+import serial
 
 from eigsep_sensors.peltier.temperature_controller import TemperatureController
 
@@ -167,4 +168,87 @@ class TestTemperatureController:
 
         controller.close()
 
+        mock_serial.close.assert_called_once()
+
+    def test_init_invalid_port(self):
+        """Test initialization with invalid port raises ValueError."""
+        with patch("eigsep_sensors.peltier.temperature_controller.time.sleep"):
+            with pytest.raises(ValueError, match="Port must be a non-empty string"):
+                TemperatureController("")
+            
+            with pytest.raises(ValueError, match="Port must be a non-empty string"):
+                TemperatureController(None)
+
+    def test_init_serial_exception(self):
+        """Test initialization handles serial port errors."""
+        with (
+            patch("eigsep_sensors.peltier.temperature_controller.time.sleep"),
+            patch(
+                "eigsep_sensors.peltier.temperature_controller.serial.Serial"
+            ) as mock_serial_class,
+        ):
+            mock_serial_class.side_effect = serial.SerialException("Port not found")
+            
+            with pytest.raises(RuntimeError, match="Failed to open serial port"):
+                TemperatureController("/dev/ttyACM0")
+
+    def test_write_command_timeout(self, mock_serial):
+        """Test command timeout handling."""
+        mock_serial.readline.return_value = b""  # Empty response = timeout
+        with patch("eigsep_sensors.peltier.temperature_controller.time.sleep"):
+            controller = TemperatureController("/dev/ttyACM0")
+
+        with pytest.raises(TimeoutError, match="No response to command"):
+            controller._write_command("TEST")
+
+    def test_write_command_serial_error(self, mock_serial):
+        """Test serial communication error handling."""
+        mock_serial.write.side_effect = serial.SerialException("Write failed")
+        with patch("eigsep_sensors.peltier.temperature_controller.time.sleep"):
+            controller = TemperatureController("/dev/ttyACM0")
+
+        with pytest.raises(RuntimeError, match="Serial communication failed"):
+            controller._write_command("TEST")
+
+    def test_read_temperature_timeout(self, mock_serial):
+        """Test temperature read timeout handling."""
+        mock_serial.readline.side_effect = [b"12345,\n", b"", b""]  # Timeout on line 2
+        with patch("eigsep_sensors.peltier.temperature_controller.time.sleep"):
+            controller = TemperatureController("/dev/ttyACM0")
+
+        with pytest.raises(TimeoutError, match="Timeout reading line 2"):
+            controller.read_temperature()
+
+    def test_read_temperature_invalid_timestamp(self, mock_serial):
+        """Test handling of invalid timestamp."""
+        mock_serial.readline.side_effect = [b"invalid,\n", b"25.5,30.0,0.75,\n", b"32.0,35.0,0.5\n"]
+        with patch("eigsep_sensors.peltier.temperature_controller.time.sleep"):
+            controller = TemperatureController("/dev/ttyACM0")
+
+        with pytest.raises(ValueError, match="Invalid timestamp"):
+            controller.read_temperature()
+
+    def test_read_temperature_invalid_numeric(self, mock_serial):
+        """Test handling of invalid numeric values."""
+        mock_serial.readline.side_effect = [b"12345,\n", b"25.5,invalid,0.75,\n", b"32.0,35.0,0.5\n"]
+        with patch("eigsep_sensors.peltier.temperature_controller.time.sleep"):
+            controller = TemperatureController("/dev/ttyACM0")
+
+        with pytest.raises(ValueError, match="Invalid numeric values"):
+            controller.read_temperature()
+
+    def test_close_with_monitoring_error(self, mock_serial):
+        """Test close handles errors gracefully."""
+        mock_serial.readline.side_effect = [b"12345,\n", b"25.5,30.0,0.75,\n", b"32.0,35.0,0.5\n"] * 10
+        with patch("eigsep_sensors.peltier.temperature_controller.time.sleep"):
+            controller = TemperatureController("/dev/ttyACM0")
+        
+        # Start monitoring
+        controller.start_monitoring(0.1)
+        
+        # Make stop_monitoring raise an exception
+        controller._monitor_thread = None  # This will cause an AttributeError
+        
+        # Close should still work without raising
+        controller.close()
         mock_serial.close.assert_called_once()
