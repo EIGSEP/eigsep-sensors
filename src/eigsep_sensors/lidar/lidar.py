@@ -1,7 +1,6 @@
 import serial
 import time
 
-
 class Lidar:
     """
     Base class for LiDAR sensors.
