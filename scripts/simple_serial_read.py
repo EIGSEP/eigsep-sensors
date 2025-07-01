@@ -10,6 +10,7 @@ if len(sys.argv) < 2 or sys.argv[1] not in ("REQ", "CAL"):
     sys.exit(1)
 
 command = sys.argv[1] + "\n"
+is_cal_mode = sys.argv[1] == "CAL"
 
 try:
     with serial.Serial(PORT, BAUD, timeout=1) as ser:
@@ -19,13 +20,24 @@ try:
 
         print(f"Sending '{command.strip()}' repeatedly. Press Ctrl+C to stop.")
         while True:
-            ser.write(command.encode())
-            ser.flush()
+            if not is_cal_mode:
+                ser.write(command.encode())
+                ser.flush()
+
             time.sleep(0.1)  # Give Pico time to respond
 
             while ser.in_waiting:
-                line = ser.readline()
-                print(line.decode(errors="ignore").strip())
+                line = ser.readline().decode(errors="ignore").strip()
+                print(line)
+
+                # Stop CAL loop if line contains "3,3"
+                if is_cal_mode and "3,3" in line:
+                    print("Calibration complete (3,3 detected). Stopping.")
+                    sys.exit(0)
+
+            if is_cal_mode:
+                ser.write(command.encode())
+                ser.flush()
 
             time.sleep(0.1)
 
