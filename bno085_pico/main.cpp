@@ -9,7 +9,7 @@
 #define IMU_ADDR 0x4A
 
 BNO08x imu1;
-BNO08x imu2;
+//BNO08x imu2;
 
 void init_i2c_bus(i2c_inst_t *i2c, uint sda, uint scl) {
     i2c_init(i2c, I2C_BAUDRATE);
@@ -29,59 +29,94 @@ void enable_imu_features(BNO08x& imu) {
 }
 
 void print_sensor_data(BNO08x& imu, const char* label) {
-    if (!imu.getSensorEvent()) return;
+    // Initialize all fields to a known invalid state
+    float q[4] = {NAN, NAN, NAN, NAN};
+    float a[3] = {NAN, NAN, NAN};
+    float la[3] = {NAN, NAN, NAN};
+    float g[3] = {NAN, NAN, NAN};
+    float m[3] = {NAN, NAN, NAN};
+    float grav[3] = {NAN, NAN, NAN};
 
-    sh2_SensorValue_t event = imu.sensorValue;
+    // Collect sensor data until timeout or all found
+    absolute_time_t deadline = make_timeout_time_ms(100);
+    while (!time_reached(deadline)) {
+        if (!imu.getSensorEvent())
+            continue;
 
-    printf("[%s] ", label);
-
-    switch (event.sensorId) {
-        case SENSOR_REPORTID_ROTATION_VECTOR:
-            printf("q:%.3f:%.3f:%.3f:%.3f,",
-                   event.un.rotationVector.i,
-                   event.un.rotationVector.j,
-                   event.un.rotationVector.k,
-                   event.un.rotationVector.real);
-            break;
-        case SENSOR_REPORTID_ACCELEROMETER:
-            printf("a:%.3f:%.3f:%.3f,", event.un.accelerometer.x,
-                   event.un.accelerometer.y, event.un.accelerometer.z);
-            break;
-        case SENSOR_REPORTID_LINEAR_ACCELERATION:
-            printf("la:%.3f:%.3f:%.3f,", event.un.linearAcceleration.x,
-                   event.un.linearAcceleration.y, event.un.linearAcceleration.z);
-            break;
-        case SENSOR_REPORTID_RAW_GYROSCOPE:
-            printf("g:%.3f:%.3f:%.3f,", event.un.gyroscope.x,
-                   event.un.gyroscope.y, event.un.gyroscope.z);
-            break;
-        case SENSOR_REPORTID_MAGNETIC_FIELD:
-            printf("m:%.3f:%.3f:%.3f,", event.un.magneticField.x,
-                   event.un.magneticField.y, event.un.magneticField.z);
-            break;
-        case SENSOR_REPORTID_GRAVITY:
-            printf("grav:%.3f:%.3f:%.3f,", event.un.gravity.x,
-                   event.un.gravity.y, event.un.gravity.z);
-            break;
-        default:
-            printf("Unknown event ID: %d", event.sensorId);
+        sh2_SensorValue_t event = imu.sensorValue;
+        switch (event.sensorId) {
+            case SENSOR_REPORTID_ROTATION_VECTOR:
+                q[0] = event.un.rotationVector.i;
+                q[1] = event.un.rotationVector.j;
+                q[2] = event.un.rotationVector.k;
+                q[3] = event.un.rotationVector.real;
+                break;
+            case SENSOR_REPORTID_ACCELEROMETER:
+                a[0] = event.un.accelerometer.x;
+                a[1] = event.un.accelerometer.y;
+                a[2] = event.un.accelerometer.z;
+                break;
+            case SENSOR_REPORTID_LINEAR_ACCELERATION:
+                la[0] = event.un.linearAcceleration.x;
+                la[1] = event.un.linearAcceleration.y;
+                la[2] = event.un.linearAcceleration.z;
+                break;
+            case SENSOR_REPORTID_GYROSCOPE_CALIBRATED:
+                g[0] = event.un.gyroscope.x;
+                g[1] = event.un.gyroscope.y;
+                g[2] = event.un.gyroscope.z;
+                break;
+            case SENSOR_REPORTID_MAGNETIC_FIELD:
+                m[0] = event.un.magneticField.x;
+                m[1] = event.un.magneticField.y;
+                m[2] = event.un.magneticField.z;
+                break;
+            case SENSOR_REPORTID_GRAVITY:
+                grav[0] = event.un.gravity.x;
+                grav[1] = event.un.gravity.y;
+                grav[2] = event.un.gravity.z;
+                break;
+        }
     }
 
-    printf("\n");
+    printf("[%s] ", label);
+    printf("q:%.3f:%.3f:%.3f:%.3f,", q[0], q[1], q[2], q[3]);
+    printf("a:%.3f:%.3f:%.3f,", a[0], a[1], a[2]);
+    printf("la:%.3f:%.3f:%.3f,", la[0], la[1], la[2]);
+    printf("g:%.3f:%.3f:%.3f,", g[0], g[1], g[2]);
+    printf("m:%.3f:%.3f:%.3f,", m[0], m[1], m[2]);
+    printf("grav:%.3f:%.3f:%.3f\n", grav[0], grav[1], grav[2]);
 }
 
 void calibrate_imu(BNO08x& imu) {
-    printf("Starting calibration...\n");
-    while (true) {
-        if (imu.getSensorEvent()) {
-            sh2_SensorValue_t event = imu.sensorValue;
-            printf("Sensor %d accuracy: %d\n", event.sensorId, event.status);
-            if (event.status >= 3) {
-                printf("Sensor %d is calibrated.\n", event.sensorId);
+    int accel_status = -1;
+    int mag_status = -1;
+
+    absolute_time_t deadline = make_timeout_time_ms(500);
+
+    while (!time_reached(deadline)) {
+        if (!imu.getSensorEvent()) continue;
+
+        sh2_SensorValue_t event = imu.sensorValue;
+
+        switch (event.sensorId) {
+            case SENSOR_REPORTID_ACCELEROMETER:
+                accel_status = event.status;
                 break;
-            }
+            case SENSOR_REPORTID_MAGNETIC_FIELD:
+                mag_status = event.status;
+                break;
         }
-        sleep_ms(250);
+
+        // Exit early if both are calibrated
+        if (accel_status == 3 && mag_status == 3) break;
+    }
+
+    if (accel_status >= 2 && mag_status >= 2) {
+        printf("%d,%d\n", accel_status, mag_status);
+        imu.saveCalibration();
+    } else {
+        printf("%d,%d\n", accel_status, mag_status);
     }
 }
 
@@ -90,28 +125,29 @@ int main() {
     sleep_ms(1000);  // USB startup delay
 
     init_i2c_bus(i2c0, 0, 1);
-    init_i2c_bus(i2c1, 2, 3);
+    //init_i2c_bus(i2c1, 2, 3);
 
     while (!imu1.begin(IMU_ADDR, i2c0)) {
         printf("IMU1 not detected on i2c0\n");
         sleep_ms(1000);
     }
-    while (!imu2.begin(IMU_ADDR, i2c1)) {
-        printf("IMU2 not detected on i2c1\n");
-        sleep_ms(1000);
-    }
+    //while (!imu2.begin(IMU_ADDR, i2c1)) {
+    //    printf("IMU2 not detected on i2c1\n");
+    //    sleep_ms(1000);
+    //}
 
     enable_imu_features(imu1);
-    enable_imu_features(imu2);
+    //enable_imu_features(imu2);
 
     char buf[16];
     while (true) {
         if (fgets(buf, sizeof(buf), stdin)) {
             if (strncmp(buf, "REQ", 3) == 0) {
                 print_sensor_data(imu1, "IMU1");
-                print_sensor_data(imu2, "IMU2");
+                //print_sensor_data(imu2, "IMU2");
             } else if (strncmp(buf, "CAL", 3) == 0) {
                 calibrate_imu(imu1);
+                //calibrate_imu(imu2);
             }
         }
         sleep_ms(50);
