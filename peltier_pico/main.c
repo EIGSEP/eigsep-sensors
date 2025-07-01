@@ -62,7 +62,18 @@ void control_temperature() {
         sensor1_rom = rom_codes[0];                                                   // removed uint64_t from line 62/63 given we define these globally
         sensor2_rom = rom_codes[1];
     } else {
-        printf("Err: only %d DS18B20 sensor(s) found on the bus.\n", count);
+        printf("FATAL: Need exactly 2 DS18B20 sensors, found %d. STOPPING.\n", count);
+        // Disable all outputs for safety before halting
+        gpio_put(HBRIDGE_DIR_PIN1, false);
+        gpio_put(HBRIDGE_DIR_PIN2, false);
+        gpio_put(HBRIDGE_DIR_PIN3, false);
+        gpio_put(HBRIDGE_DIR_PIN4, false);
+        pwm_set_gpio_level(HBRIDGE_PWM_PIN, 0);
+        pwm_set_gpio_level(HBRIDGE_PWM_PIN2, 0);
+        // Halt safely - system cannot operate without both sensors
+        while(1) {
+            tight_loop_contents();
+        }
     }
     // end search for ROm codes
     
