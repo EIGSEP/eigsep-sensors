@@ -1,7 +1,8 @@
 import serial
 import time
 
-class Lidar():
+
+class Lidar:
     """
     Base class for LiDAR sensors.
 
@@ -37,14 +38,16 @@ class Lidar():
             raise ValueError("Timeout must be positive")
         if baudrate <= 0:
             raise ValueError("Baudrate must be positive")
-        
+
         self.port = port
         self.timeout = timeout
         self.baudrate = baudrate
         self.validate_data = validate_data
-        
+
         try:
-            self.ser = serial.Serial(port=port, baudrate=baudrate, timeout=timeout)
+            self.ser = serial.Serial(
+                port=port, baudrate=baudrate, timeout=timeout
+            )
         except serial.SerialException as e:
             raise serial.SerialException(f"Failed to connect to {port}: {e}")
 
@@ -58,7 +61,7 @@ class Lidar():
 
     def close(self):
         """Close the serial connection."""
-        if hasattr(self, 'ser') and self.ser.is_open:
+        if hasattr(self, "ser") and self.ser.is_open:
             self.ser.close()
 
     def _request_data(self):
@@ -71,12 +74,14 @@ class Lidar():
     def _read_raw(self):
         """
         Read raw response from the serial connection.
-        
+
         Returns:
             str or None: Raw response string if successful, None on failure.
         """
         try:
-            return self.ser.readline().decode('utf-8', errors='replace').strip()
+            return (
+                self.ser.readline().decode("utf-8", errors="replace").strip()
+            )
         except (serial.SerialException, UnicodeDecodeError) as e:
             print(f"[LIDAR] Read error: {e}")
             return None
@@ -114,20 +119,28 @@ class Lidar():
             parts = line.strip().split(",")
             if len(parts) != 3:
                 return None
-            
+
             distance = float(parts[0])
             strength = float(parts[1])
             temperature = float(parts[2])
-            
+
             # Validate data ranges if enabled
             if self.validate_data:
                 if distance < 0 or distance > 1000:  # Reasonable max range
-                    print(f"[LIDAR] Warning: Distance {distance}m outside expected range")
-                if temperature < -40 or temperature > 85:  # Typical sensor range
-                    print(f"[LIDAR] Warning: Temperature {temperature}°C outside expected range")
+                    print(
+                        f"[LIDAR] Warning: Distance {distance}m outside expected range"
+                    )
+                if (
+                    temperature < -40 or temperature > 85
+                ):  # Typical sensor range
+                    print(
+                        f"[LIDAR] Warning: Temperature {temperature}°C outside expected range"
+                    )
                 if strength < 0:  # Strength should be non-negative
-                    print(f"[LIDAR] Warning: Negative strength value {strength}")
-            
+                    print(
+                        f"[LIDAR] Warning: Negative strength value {strength}"
+                    )
+
             data["distance"] = distance
             data["strength"] = strength
             data["temperature"] = temperature
