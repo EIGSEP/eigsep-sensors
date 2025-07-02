@@ -113,33 +113,36 @@ void calibrate_imu(BNO08x& imu) {
     }
 
     if (accel_status >= 3 && mag_status >= 3) {
-        printf("%d,%d\n", accel_status, mag_status);
         imu.saveCalibration();
-    } else {
-        printf("%d,%d\n", accel_status, mag_status);
     }
+    printf("%d,%d\n", accel_status, mag_status);
 }
 
 int main() {
+    sleep_ms(500);
     stdio_init_all();
     sleep_ms(1000);  // USB startup delay
 
     init_i2c_bus(i2c0, 0, 1);
     //init_i2c_bus(i2c1, 2, 3);
+    char buf[16];
 
     while (!imu1.begin(IMU_ADDR, i2c0)) {
-        printf("IMU1 not detected on i2c0\n");
-        sleep_ms(1000);
+        if (fgets(buf, sizeof(buf), stdin)) {
+            if (strncmp(buf, "REQ", 3) == 0 || strncmp(buf, "CAL", 3) == 0) {
+                printf("IMU1 not detected on i2c0\n");
+            }
+        }
+        sleep_ms(50);
     }
     //while (!imu2.begin(IMU_ADDR, i2c1)) {
     //    printf("IMU2 not detected on i2c1\n");
-    //    sleep_ms(1000);
+    //    sleep_ms(50);
     //}
-
+    printf("IMUs Detected.\n");
     enable_imu_features(imu1);
     //enable_imu_features(imu2);
 
-    char buf[16];
     while (true) {
         if (fgets(buf, sizeof(buf), stdin)) {
             if (strncmp(buf, "REQ", 3) == 0) {
