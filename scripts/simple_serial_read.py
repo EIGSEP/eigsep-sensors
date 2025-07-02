@@ -12,11 +12,22 @@ if len(sys.argv) < 2 or sys.argv[1] not in ("REQ", "CAL"):
 command = sys.argv[1] + "\n"
 is_cal_mode = sys.argv[1] == "CAL"
 
-try:
-    with serial.Serial(PORT, BAUD, timeout=1) as ser:
+def try_open_serial():
+    while True:
+        try:
+            ser = serial.Serial(PORT, BAUD, timeout=1)
+            print("Connected to serial.")
+            return ser
+        except serial.SerialException:
+            print("Waiting for Pico...")
+            time.sleep(1)
+
+while True:
+    ser = try_open_serial()
+    try:
         ser.reset_input_buffer()
         ser.reset_output_buffer()
-        time.sleep(2)  # Give Pico time to boot
+        time.sleep(2)  # Let Pico boot
 
         print(f"Sending '{command.strip()}' repeatedly. Press Ctrl+C to stop.")
         while True:
@@ -24,15 +35,15 @@ try:
                 ser.write(command.encode())
                 ser.flush()
 
-            time.sleep(0.1)  # Give Pico time to respond
+            time.sleep(0.1)
 
             while ser.in_waiting:
                 line = ser.readline().decode(errors="ignore").strip()
                 print(line)
 
-                # Stop CAL loop if line contains "3,3"
                 if is_cal_mode and "3,3" in line:
                     print("Calibration complete (3,3 detected). Stopping.")
+                    ser.close()
                     sys.exit(0)
 
             if is_cal_mode:
@@ -41,7 +52,10 @@ try:
 
             time.sleep(0.1)
 
-except serial.SerialException as e:
-    print(f"Serial error: {e}")
-except KeyboardInterrupt:
-    print("\nExiting.")
+    except serial.SerialException as e:
+        print(f"Serial error: {e}. Reconnecting...")
+        time.sleep(1)  # Give USB stack time to recover
+        continue
+    except KeyboardInterrupt:
+        print("\nExiting.")
+        break
