@@ -117,19 +117,15 @@ class Thermistor:
 
     def read_temperature(self):
         """
-        Non-blocking read of the temperature from the thermistor(s).
+        Blocking read of the temperature from the thermistor(s).
 
         Returns
         -------
         dict
             The temperature in degrees Celsius. The key corresponds to
             the ADC pin that the reading is from. None if no data is
-            available.
+            received.
 
-        Raises
-        ------
-        ValueError
-            If the response from the thermistor is invalid.
 
         Notes
         -----
