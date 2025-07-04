@@ -1,3 +1,0 @@
-[submodule "bno085_pico/BNO08x_Pico_Library"]
-	url = https://github.com/robotcopper/BNO08x_Pico_Library/tree/main
-	path = bno085_pico/BNO08x_Pico_Library
