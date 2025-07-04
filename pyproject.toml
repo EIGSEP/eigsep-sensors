@@ -23,8 +23,10 @@ classifiers = [
 dependencies = [
   "numpy",
   "mpremote",
+  "smbus2",
   "adafruit-circuitpython-mma8451",
   "adafruit-circuitpython-bno08x",
+  "adafruit-blinka<8.60.0",
   "board",
   "mockserial @ git+https://github.com/christianhbye/mockserial.git"
 ]

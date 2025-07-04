@@ -38,15 +38,51 @@ def calibrate_imu():
     imu.begin_calibration()
     time.sleep(1)
 
+    # Enable minimal necessary features for calibration feedback
+
+    calibration_good_at = False
+    wanted_mag_status = 2
+    wanted_accel_status = 2
+    wanted_gyro_status = 2
     while True:
-        status = imu.calibration_status
-        print(f"Calibration status: {status} (0=Unreliable, 3=Fully calibrated)")
-        if status == 3:
-            print("Fully calibrated. Saving...")
+        time.sleep(0.1)
+
+        # Print live magnetic data
+        mx, my, mz = imu.magnetic
+        print("Magnetometer: X=%0.3f Y=%0.3f Z=%0.3f" % (mx, my, mz))
+
+        # Print game rotation quaternion
+        q_i, q_j, q_k, q_real = imu.quaternion
+        print("Quat: I=%0.3f J=%0.3f K=%0.3f R=%0.3f" % (q_i, q_j, q_k, q_real))
+
+        # Check calibration status (magnetometer)
+        mag_status, accel_status, gyro_status = imu.calibration_status
+        print("Mag Calibration: %s (%d)" % (
+            ["Unreliable", "Low", "Medium", "High"][mag_status], mag_status))
+        print("Accel Calibration: %s (%d)" % (
+            ["Unreliable", "Low", "Medium", "High"][accel_status], accel_status))
+        print("Gyro Calibration: %s (%d)" % (
+            ["Unreliable", "Low", "Medium", "High"][gyro_status], gyro_status))
+
+        if not calibration_good_at:
+            if mag_status >= wanted_mag_status:
+                wanted_mag_status += 1
+                calibration_good_at = True
+            if accel_status >= wanted_accel_status:
+                wanted_accel_status += 1
+                calibration_good_at = True
+            if gyro_status >= wanted_gyro_status:
+                wanted_gyro_status += 1
+                calibration_good_at = True
+        if calibration_good_at:
+            # No user input on microcontrollers usually, so save automatically
             imu.save_calibration_data()
-            print("Calibration data saved.")
+            print("Calibration saved.")
+            calibration_good_at = False
+        if mag_status >= 3 and accel_status >= 3 and gyro_status >= 3:
             break
-        time.sleep(1)
+
+        print("--------------------------------------------------")
 
 def read_and_format_imu_data():
     """
